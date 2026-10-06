@@ -28,34 +28,14 @@ jobs:
           git apply --ignore-whitespace --whitespace=nowarn ../patches/client-fixes.patch
           cd ..
 
-      - name: Install Native Build Dependencies
+      - name: Download Verified Native Libraries
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake ninja-build autoconf automake libtool
-
-      - name: Setup Android NDK
-        run: |
-          NDK_PATH=$(find "$ANDROID_HOME/ndk" -maxdepth 1 -mindepth 1 2>/dev/null | sort -V | tail -n 1)
-          if [ -z "$NDK_PATH" ]; then
-            echo "Installing NDK via sdkmanager..."
-            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;27.2.12479018"
-            NDK_PATH="$ANDROID_HOME/ndk/27.2.12479018"
-          fi
-          echo "ANDROID_NDK_HOME=$NDK_PATH" >> "$GITHUB_ENV"
-          echo "Using Android NDK at: $NDK_PATH"
-
-      - name: Cache Native Libraries
-        id: cache_natives
-        uses: actions/cache@v4
-        with:
-          path: Content.Android/lib
-          key: native-libs-${{ hashFiles('scripts/build-native-libs.sh') }}
-
-      - name: Build Native Libraries from Source
-        if: steps.cache_natives.outputs.cache-hit != 'true'
-        run: |
-          chmod +x scripts/build-native-libs.sh
-          bash scripts/build-native-libs.sh
+          mkdir -p Content.Android/lib/arm64-v8a
+          curl -sSL "https://github.com/SolomonNumb1/space-station-14-mobile/releases/download/v1.0.0/native-libs-arm64.tar.gz" -o native-libs.tar.gz
+          tar -xzf native-libs.tar.gz -C Content.Android/lib/arm64-v8a/
+          rm -f native-libs.tar.gz
+          echo "Native libraries unpacked:"
+          ls -lh Content.Android/lib/arm64-v8a/
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -107,3 +87,4 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          overwrite: true
