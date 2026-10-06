@@ -97,25 +97,11 @@ else
   echo "OpenAL Soft already built"
 fi
 
-# 4. Build SDL3
-echo "=== Building SDL3 ==="
+# 4. Fetch SDL3 (official C# Android build by ppy/SDL3-CS)
+echo "=== Fetching SDL3 for .NET C# ==="
 if [ ! -f "$OUT_DIR/libSDL3.so" ]; then
-  SDL_SRC="$BUILD_DIR/sdl3"
-  if [ ! -d "$SDL_SRC" ]; then
-    git clone --depth 1 --branch release-3.2.4 https://github.com/libsdl-org/SDL.git "$SDL_SRC"
-  fi
-  cmake -B "$SDL_SRC/build" -S "$SDL_SRC" \
-    -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
-    -DANDROID_ABI="$ABI" \
-    -DANDROID_PLATFORM="$MIN_API" \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DSDL_SHARED=ON \
-    -DSDL_STATIC=OFF \
-    -DSDL_TEST_LIBRARY=OFF \
-    -DSDL_TESTS=OFF
-  cmake --build "$SDL_SRC/build" --config Release -j"$NUM_JOBS"
-  find "$SDL_SRC/build" -name "libSDL3.so" -exec cp {} "$OUT_DIR/libSDL3.so" \;
-  echo "SDL3 built successfully"
+  curl -sSL "https://github.com/ppy/SDL3-CS/raw/master/native/android/arm64-v8a/libSDL3.so" -o "$OUT_DIR/libSDL3.so"
+  echo "SDL3 fetched successfully"
 else
   echo "SDL3 already built"
 fi
