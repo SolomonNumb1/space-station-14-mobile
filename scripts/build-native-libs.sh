@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Find NDK
+if [ -z "${ANDROID_NDK_HOME:-}" ]; then
+  if [ -n "${ANDROID_HOME:-}" ] && [ -d "$ANDROID_HOME/ndk" ]; then
+    ANDROID_NDK_HOME=$(find "$ANDROID_HOME/ndk" -maxdepth 1 -mindepth 1 | sort -V | tail -n 1)
+  elif [ -n "${ANDROID_NDK_ROOT:-}" ]; then
+    ANDROID_NDK_HOME="$ANDROID_NDK_ROOT"
+  else
+    echo "ERROR: ANDROID_NDK_HOME is not set and could not be detected."
+    exit 1
+  fi
+fi
+
+echo "=== Using Android NDK: $ANDROID_NDK_HOME ==="
+
+TOOLCHAIN="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake"
+ABI="arm64-v8a"
+MIN_API="android-26"
+NUM_JOBS=$(nproc 2>/dev/null || echo 4)
+BUILD_DIR="$(pwd)/.build-natives"
+OUT_DIR="$(pwd)/Content.Android/lib/$ABI"
+
+mkdir -p "$BUILD_DIR"
+mkdir -p "$OUT_DIR"
+
+# 1. Build FreeType
+echo "=== Building FreeType ==="
+if [ ! -f "$OUT_DIR/libfreetype.so" ] || [ ! -f "$OUT_DIR/libfreetype6.so" ]; then
+  FT_SRC="$BUILD_DIR/freetype"
+  if [ ! -d "$FT_SRC" ]; then
+    git clone --depth 1 --branch VER-2-13-3 https://gitlab.freedesktop.org/freetype/freetype.git "$FT_SRC"
+  fi
+  cmake -B "$FT_SRC/build" -S "$FT_SRC" \
+    -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
+    -DANDROID_ABI="$ABI" \
+    -DANDROID_PLATFORM="$MIN_API" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_SHARED_LIBS=ON \
+    -DFT_DISABLE_ZLIB=TRUE \
+    -DFT_DISABLE_BZIP2=TRUE \
+    -DFT_DISABLE_PNG=TRUE \
+    -DFT_DISABLE_HARFBUZZ=TRUE \
+    -DFT_DISABLE_BROTLI=TRUE
+  cmake --build "$FT_SRC/build" --config Release -j"$NUM_JOBS"
+  cp "$FT_SRC/build/libfreetype.so" "$OUT_DIR/libfreetype.so"
+  cp "$FT_SRC/build/libfreetype.so" "$OUT_DIR/libfreetype6.so"
+  echo "✓ FreeType built successfully"
+else
+  echo "✓ FreeType already built"
+fi
+
+# 2. Build Zstd
+echo "=== Building Zstd ==="
+if [ ! -f "$OUT_DIR/libzstd.so" ]; then
+  ZSTD_SRC="$BUILD_DIR/zstd"
+  if [ ! -d "$ZSTD_SRC" ]; then
+    git clone --depth 1 --branch v1.5.6 https://github.com/facebook/zstd.git "$ZSTD_SRC"
+  fi
+  cmake -B "$ZSTD_SRC/build/cmake/build" -S "$ZSTD_SRC/build/cmake" \
+    -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
+    -DANDROID_ABI="$ABI" \
+    -DANDROID_PLATFORM="$MIN_API" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DZSTD_BUILD_SHARED=ON \
+    -DZSTD_BUILD_STATIC=OFF \
+    -DZSTD_BUILD_PROGRAMS=OFF \
+    -DZSTD_BUILD_TESTS=OFF
+  cmake --build "$ZSTD_SRC/build/cmake/build" --config Release --target libzstd_shared -j"$NUM_JOBS"
+  cp "$ZSTD_SRC/build/cmake/build/libzstd.so" "$OUT_DIR/libzstd.so"
+  echo "✓ Zstd built successfully"
+else
+  echo "✓ Zstd already built"
+fi
+
+# 3. Build OpenAL Soft
+echo "=== Building OpenAL Soft ==="
+if [ ! -f "$OUT_DIR/libopenal.so" ]; then
+  OPENAL_SRC="$BUILD_DIR/openal"
+  if [ ! -d "$OPENAL_SRC" ]; then
+    git clone --depth 1 --branch 1.23.1 https://github.com/kcat/openal-soft.git "$OPENAL_SRC"
+  fi
+  cmake -B "$OPENAL_SRC/build" -S "$OPENAL_SRC" \
+    -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
+    -DANDROID_ABI="$ABI" \
+    -DANDROID_PLATFORM="$MIN_API" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DLIBTYPE=SHARED \
+    -DALSOFT_EXAMPLES=OFF \
+    -DALSOFT_UTILS=OFF \
+    -DALSOFT_TESTS=OFF
+  cmake --build "$OPENAL_SRC/build" --config Release -j"$NUM_JOBS"
+  cp "$OPENAL_SRC/build/libopenal.so" "$OUT_DIR/libopenal.so"
+  echo "✓ OpenAL Soft built successfully"
+else
+  echo "✓ OpenAL Soft already built"
+fi
+
+# 4. Build SDL3
+echo "=== Building SDL3 ==="
+if [ ! -f "$OUT_DIR/libSDL3.so" ]; then
+  SDL_SRC="$BUILD_DIR/sdl3"
+  if [ ! -d "$SDL_SRC" ]; then
+    git clone --depth 1 --branch release-3.2.4 https://github.com/libsdl-org/SDL.git "$SDL_SRC"
+  fi
+  cmake -B "$SDL_SRC/build" -S "$SDL_SRC" \
+    -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
+    -DANDROID_ABI="$ABI" \
+    -DANDROID_PLATFORM="$MIN_API" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DSDL_SHARED=ON \
+    -DSDL_STATIC=OFF \
+    -DSDL_TEST_LIBRARY=OFF \
+    -DSDL_TESTS=OFF
+  cmake --build "$SDL_SRC/build" --config Release -j"$NUM_JOBS"
+  cp "$SDL_SRC/build/libSDL3.so" "$OUT_DIR/libSDL3.so"
+  echo "✓ SDL3 built successfully"
+else
+  echo "✓ SDL3 already built"
+fi
+
+# 5. Build Libsodium
+echo "=== Building Libsodium ==="
+if [ ! -f "$OUT_DIR/libsodium.so" ]; then
+  SODIUM_SRC="$BUILD_DIR/libsodium"
+  if [ ! -d "$SODIUM_SRC" ]; then
+    git clone --depth 1 --branch 1.0.20-RELEASE https://github.com/jedisct1/libsodium.git "$SODIUM_SRC"
+  fi
+  (
+    cd "$SODIUM_SRC"
+    ./autogen.sh
+    export ANDROID_NDK_HOME="$ANDROID_NDK_HOME"
+    export NDK_PLATFORM="$MIN_API"
+    export LIBSODIUM_FULL_BUILD=1
+    ./dist-build/android-armv8-a.sh
+  )
+  cp "$SODIUM_SRC/libsodium-android-armv8-a/lib/libsodium.so" "$OUT_DIR/libsodium.so"
+  echo "✓ Libsodium built successfully"
+else
+  echo "✓ Libsodium already built"
+fi
+
+echo "=== All native libraries successfully built! ==="
+ls -lh "$OUT_DIR"

@@ -1,0 +1,16 @@
+# Build outputs
+Content.Android/bin/
+Content.Android/obj/
+Content.Android/lib/
+.build-natives/
+bin/
+obj/
+*.apk
+*.log
+
+# IDE & OS
+.vs/
+.idea/
+*.user
+Thumbs.db
+[Dd]esktop.ini
