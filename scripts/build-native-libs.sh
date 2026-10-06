@@ -44,11 +44,11 @@ if [ ! -f "$OUT_DIR/libfreetype.so" ] || [ ! -f "$OUT_DIR/libfreetype6.so" ]; th
     -DFT_DISABLE_HARFBUZZ=TRUE \
     -DFT_DISABLE_BROTLI=TRUE
   cmake --build "$FT_SRC/build" --config Release -j"$NUM_JOBS"
-  cp "$FT_SRC/build/libfreetype.so" "$OUT_DIR/libfreetype.so"
-  cp "$FT_SRC/build/libfreetype.so" "$OUT_DIR/libfreetype6.so"
-  echo "✓ FreeType built successfully"
+  find "$FT_SRC/build" -name "libfreetype.so" -exec cp {} "$OUT_DIR/libfreetype.so" \;
+  cp "$OUT_DIR/libfreetype.so" "$OUT_DIR/libfreetype6.so"
+  echo "FreeType built successfully"
 else
-  echo "✓ FreeType already built"
+  echo "FreeType already built"
 fi
 
 # 2. Build Zstd
@@ -68,10 +68,10 @@ if [ ! -f "$OUT_DIR/libzstd.so" ]; then
     -DZSTD_BUILD_PROGRAMS=OFF \
     -DZSTD_BUILD_TESTS=OFF
   cmake --build "$ZSTD_SRC/build/cmake/build" --config Release --target libzstd_shared -j"$NUM_JOBS"
-  cp "$ZSTD_SRC/build/cmake/build/libzstd.so" "$OUT_DIR/libzstd.so"
-  echo "✓ Zstd built successfully"
+  find "$ZSTD_SRC/build/cmake/build" -name "libzstd.so" -exec cp {} "$OUT_DIR/libzstd.so" \;
+  echo "Zstd built successfully"
 else
-  echo "✓ Zstd already built"
+  echo "Zstd already built"
 fi
 
 # 3. Build OpenAL Soft
@@ -91,10 +91,10 @@ if [ ! -f "$OUT_DIR/libopenal.so" ]; then
     -DALSOFT_UTILS=OFF \
     -DALSOFT_TESTS=OFF
   cmake --build "$OPENAL_SRC/build" --config Release -j"$NUM_JOBS"
-  cp "$OPENAL_SRC/build/libopenal.so" "$OUT_DIR/libopenal.so"
-  echo "✓ OpenAL Soft built successfully"
+  find "$OPENAL_SRC/build" -name "libopenal.so" -exec cp {} "$OUT_DIR/libopenal.so" \;
+  echo "OpenAL Soft built successfully"
 else
-  echo "✓ OpenAL Soft already built"
+  echo "OpenAL Soft already built"
 fi
 
 # 4. Build SDL3
@@ -114,10 +114,10 @@ if [ ! -f "$OUT_DIR/libSDL3.so" ]; then
     -DSDL_TEST_LIBRARY=OFF \
     -DSDL_TESTS=OFF
   cmake --build "$SDL_SRC/build" --config Release -j"$NUM_JOBS"
-  cp "$SDL_SRC/build/libSDL3.so" "$OUT_DIR/libSDL3.so"
-  echo "✓ SDL3 built successfully"
+  find "$SDL_SRC/build" -name "libSDL3.so" -exec cp {} "$OUT_DIR/libSDL3.so" \;
+  echo "SDL3 built successfully"
 else
-  echo "✓ SDL3 already built"
+  echo "SDL3 already built"
 fi
 
 # 5. Build Libsodium
@@ -135,10 +135,10 @@ if [ ! -f "$OUT_DIR/libsodium.so" ]; then
     export LIBSODIUM_FULL_BUILD=1
     ./dist-build/android-armv8-a.sh
   )
-  cp "$SODIUM_SRC/libsodium-android-armv8-a/lib/libsodium.so" "$OUT_DIR/libsodium.so"
-  echo "✓ Libsodium built successfully"
+  find "$SODIUM_SRC/libsodium-android-armv8-a" -name "libsodium.so" -exec cp {} "$OUT_DIR/libsodium.so" \;
+  echo "Libsodium built successfully"
 else
-  echo "✓ Libsodium already built"
+  echo "Libsodium already built"
 fi
 
 echo "=== All native libraries successfully built! ==="
