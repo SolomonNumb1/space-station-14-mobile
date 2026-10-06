@@ -1,0 +1,8 @@
+[submodule "space-station-14"]
+	path = space-station-14
+	url = https://github.com/space-wizards/space-station-14.git
+	branch = master
+[submodule "RobustToolbox"]
+	path = RobustToolbox
+	url = https://github.com/SolomonNumb1/RobustToolbox.git
+	branch = master

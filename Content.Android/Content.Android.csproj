@@ -1,0 +1,103 @@
+<Project TreatAsLocalProperty="OutputType">
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationId>io.spacestation14.android</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>NU1701;CA1416</NoWarn>
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <PublishTrimmed>false</PublishTrimmed>
+    <TrimMode>None</TrimMode>
+    <AndroidUseAssemblyStore>false</AndroidUseAssemblyStore>
+    <RunAOTCompilation>true</RunAOTCompilation>
+    <UseInterpreter>false</UseInterpreter>
+    <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
+    <AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
+    <ExcludeSatelliteAssemblies>true</ExcludeSatelliteAssemblies>
+    <JavaSdkDirectory Condition="'$(JavaSdkDirectory)' == '' and Exists('C:\Program Files\Java\jdk-21.0.10')">C:\Program Files\Java\jdk-21.0.10</JavaSdkDirectory>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../space-station-14/Content.Client/Content.Client.csproj">
+      <ExcludeAssets>native</ExcludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="../space-station-14/Content.Shared/Content.Shared.csproj">
+      <ExcludeAssets>native</ExcludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="../space-station-14/RobustToolbox/Robust.Client/Robust.Client.csproj">
+      <ExcludeAssets>native</ExcludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="../space-station-14/RobustToolbox/Robust.Shared/Robust.Shared.csproj">
+      <ExcludeAssets>native</ExcludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ppy.SDL3-CS" Version="2026.629.0">
+      <Aliases>ppysdl</Aliases>
+      <ExcludeAssets>native</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="MonoGame.Library.OpenAL" Version="1.24.3.4">
+      <ExcludeAssets>native</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="SharpZstd.Interop" Version="1.5.2-beta2">
+      <ExcludeAssets>native</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="SpaceWizards.Sodium" Version="0.3.0">
+      <ExcludeAssets>native</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="libsodium" Version="1.0.20.1">
+      <ExcludeAssets>native</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <UseSystemSqlite>True</UseSystemSqlite>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AndroidNativeLibrary Include="lib\arm64-v8a\*.so" />
+    <AndroidNativeLibrary Include="lib\x86_64\*.so" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="resources.zip" />
+    <EmbeddedResource Include="logo-long.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AndroidEnvironment Include="environment.txt" />
+  </ItemGroup>
+
+  <Target Name="RemoveNuGetConflictLibs" BeforeTargets="ResolveAssemblyReferences;ResolvePackageAssets;_CreateAssemblyStore;_BuildApkEmbed;_ProcessNativeLibraries">
+    <ItemGroup>
+      <AndroidNativeLibrary Remove="@(AndroidNativeLibrary)" Condition="('%(FileName)' == 'libsodium' or '%(FileName)' == 'libzstd' or '%(FileName)' == 'libopenal' or '%(FileName)' == 'libfreetype' or '%(FileName)' == 'libSDL3' or '%(FileName)' == 'SDL3') and !$([System.String]::new('%(FullPath)').Contains('Content.Android'))" />
+      <None Remove="@(None)" Condition="('%(FileName)' == 'libsodium' or '%(FileName)' == 'libzstd' or '%(FileName)' == 'libopenal' or '%(FileName)' == 'libfreetype' or '%(FileName)' == 'libSDL3' or '%(FileName)' == 'SDL3') and !$([System.String]::new('%(FullPath)').Contains('Content.Android'))" />
+      <Content Remove="@(Content)" Condition="('%(FileName)' == 'libsodium' or '%(FileName)' == 'libzstd' or '%(FileName)' == 'libopenal' or '%(FileName)' == 'libfreetype' or '%(FileName)' == 'libSDL3' or '%(FileName)' == 'SDL3') and !$([System.String]::new('%(FullPath)').Contains('Content.Android'))" />
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="('%(FileName)' == 'libsodium' or '%(FileName)' == 'libzstd' or '%(FileName)' == 'libopenal' or '%(FileName)' == 'libfreetype' or '%(FileName)' == 'libSDL3' or '%(FileName)' == 'SDL3') and !$([System.String]::new('%(FullPath)').Contains('Content.Android'))" />
+    </ItemGroup>
+  </Target>
+  <Target Name="FilterSatelliteAssemblies" BeforeTargets="_BuildApkEmbed;_CreateAssemblyStore;_BuildApk;CreateAssemblyStore;WrapAssembliesAsSharedLibraries">
+    <ItemGroup>
+      <_BuildApkResolvedUserAssemblies Remove="@(_BuildApkResolvedUserAssemblies)" Condition="$([System.String]::new('%(FullPath)').Contains('.resources.'))" />
+      <_BuildApkResolvedFrameworkAssemblies Remove="@(_BuildApkResolvedFrameworkAssemblies)" Condition="$([System.String]::new('%(FullPath)').Contains('.resources.'))" />
+      <ResolvedUserAssemblies Remove="@(ResolvedUserAssemblies)" Condition="$([System.String]::new('%(FullPath)').Contains('.resources.'))" />
+      <ResolvedFrameworkAssemblies Remove="@(ResolvedFrameworkAssemblies)" Condition="$([System.String]::new('%(FullPath)').Contains('.resources.'))" />
+      <_BuildApkAssembliesToAddToArchive Remove="@(_BuildApkAssembliesToAddToArchive)" Condition="$([System.String]::new('%(FullPath)').Contains('.resources.'))" />
+      <ReferenceSatellitePaths Remove="@(ReferenceSatellitePaths)" />
+      <IntermediateSatelliteAssembliesWithTargetPath Remove="@(IntermediateSatelliteAssembliesWithTargetPath)" />
+    </ItemGroup>
+  </Target>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="CustomTargets.targets" />
+  <PropertyGroup>
+    <_AndroidXA1030>false</_AndroidXA1030>
+  </PropertyGroup>
+</Project>

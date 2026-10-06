@@ -1,0 +1,2435 @@
+diff --git a/Content.Client/Content.Client.csproj b/Content.Client/Content.Client.csproj
+index 1bb9d6f2e8..861bf97261 100644
+--- a/Content.Client/Content.Client.csproj
++++ b/Content.Client/Content.Client.csproj
+@@ -2,8 +2,8 @@
+   <PropertyGroup>
+     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+     <OutputPath>..\bin\Content.Client\</OutputPath>
+-    <OutputType Condition="'$(FullRelease)' != 'True'">Exe</OutputType>
+-    <WarningsAsErrors>RA0032;nullable;CS8785</WarningsAsErrors>
++    <OutputType>Library</OutputType>
++    <WarningsAsErrors>RA0032;nullable</WarningsAsErrors>
+   </PropertyGroup>
+   <Import Project="../MSBuild/Content.props" />
+   <ItemGroup>
+diff --git a/Content.Client/Gameplay/GameplayState.cs b/Content.Client/Gameplay/GameplayState.cs
+index c782190709..33ee0cf08b 100644
+--- a/Content.Client/Gameplay/GameplayState.cs
++++ b/Content.Client/Gameplay/GameplayState.cs
+@@ -54,7 +54,7 @@ protected override void Startup()
+             // yeah this can just stay here, whatever
+             _fpsCounter = new FpsCounter(_gameTiming);
+             UserInterfaceManager.PopupRoot.AddChild(_fpsCounter);
+-            _fpsCounter.Visible = _configurationManager.GetCVar(CCVars.HudFpsCounterVisible);
++            _fpsCounter.Visible = true;
+             _configurationManager.OnValueChanged(CCVars.HudFpsCounterVisible, (show) => { _fpsCounter.Visible = show; });
+ 
+             // Version number watermark.
+diff --git a/Content.Client/Info/RulesPopup.xaml.cs b/Content.Client/Info/RulesPopup.xaml.cs
+index 745c3a8f1f..3dfb54db4c 100644
+--- a/Content.Client/Info/RulesPopup.xaml.cs
++++ b/Content.Client/Info/RulesPopup.xaml.cs
+@@ -16,7 +16,12 @@ public float Timer
+         get => _timer;
+         set
+         {
+-            WaitLabel.Text = Loc.GetString("ui-rules-wait", ("time", MathF.Floor(value)));
++            var oldSec = MathF.Floor(_timer);
++            var newSec = MathF.Floor(value);
++            if (oldSec != newSec || _timer == 0.0f)
++            {
++                WaitLabel.Text = Loc.GetString("ui-rules-wait", ("time", ((int)newSec).ToString()));
++            }
+             _timer = value;
+         }
+     }
+diff --git a/Content.Client/Launcher/ConnectServerCommand.cs b/Content.Client/Launcher/ConnectServerCommand.cs
+new file mode 100644
+index 0000000000..931ddc7247
+--- /dev/null
++++ b/Content.Client/Launcher/ConnectServerCommand.cs
+@@ -0,0 +1,42 @@
++using System;
++using Content.Client.MainMenu;
++using JetBrains.Annotations;
++using Robust.Client.UserInterface;
++using Robust.Shared.Console;
++using Robust.Shared.IoC;
++
++namespace Content.Client.Launcher;
++
++[UsedImplicitly]
++public sealed partial class ConnectServerCommand : IConsoleCommand
++{
++    [Dependency] private IUserInterfaceManager _ui = default!;
++
++    public string Command => "connectserver";
++    public string Description => "Connects directly to an SS14 server address";
++    public string Help => "connectserver <address>";
++
++    public void Execute(IConsoleShell shell, string argStr, string[] args)
++    {
++        if (args.Length == 0)
++        {
++            shell.WriteError("Address argument is required. Usage: connectserver <address>");
++            return;
++        }
++
++        var address = args[0].Trim('"', '\'');
++        shell.WriteLine($"Connecting to {address}...");
++
++        _ui.DeferAction(() =>
++        {
++            if (MainScreen.Instance != null)
++            {
++                MainScreen.Instance.ConnectTo(address);
++            }
++            else
++            {
++                shell.WriteError("MainScreen is not active, cannot connect.");
++            }
++        });
++    }
++}
+diff --git a/Content.Client/Launcher/ConnectingOverlay.cs b/Content.Client/Launcher/ConnectingOverlay.cs
+new file mode 100644
+index 0000000000..3f5f843dee
+--- /dev/null
++++ b/Content.Client/Launcher/ConnectingOverlay.cs
+@@ -0,0 +1,84 @@
++using System;
++using System.Numerics;
++using Robust.Client.UserInterface;
++using Robust.Client.UserInterface.Controls;
++using Robust.Client.UserInterface.CustomControls;
++
++namespace Content.Client.Launcher;
++
++public sealed class ConnectingOverlay : DefaultWindow
++{
++    private readonly Label _serverNameLabel;
++    private readonly Label _statusLabel;
++    private readonly ProgressBar _progressBar;
++    private readonly Button _cancelButton;
++
++    public event Action? OnCancel;
++
++    public string ServerName => _serverNameLabel.Text ?? "";
++
++    public ConnectingOverlay()
++    {
++        Title = "Connecting";
++        MinSize = new Vector2(360, 200);
++
++        var vbox = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Vertical,
++            Margin = new Thickness(16),
++            SeparationOverride = 10,
++            HorizontalAlignment = HAlignment.Center
++        };
++        Contents.AddChild(vbox);
++
++        _serverNameLabel = new Label
++        {
++            Text = "Connecting to server...",
++            FontColorOverride = Color.FromHex("#ffd43b"),
++            HorizontalAlignment = HAlignment.Center
++        };
++        vbox.AddChild(_serverNameLabel);
++
++        _statusLabel = new Label
++        {
++            Text = "Initiating connection...",
++            FontColorOverride = Color.FromHex("#ced4da"),
++            HorizontalAlignment = HAlignment.Center
++        };
++        vbox.AddChild(_statusLabel);
++
++        _progressBar = new ProgressBar
++        {
++            MinValue = 0,
++            MaxValue = 100,
++            Value = 30,
++            MinWidth = 280,
++            MinHeight = 16
++        };
++        vbox.AddChild(_progressBar);
++
++        _cancelButton = new Button
++        {
++            Text = "Cancel",
++            HorizontalAlignment = HAlignment.Center,
++            MinWidth = 100,
++            Margin = new Thickness(0, 10, 0, 0)
++        };
++        _cancelButton.OnPressed += _ =>
++        {
++            OnCancel?.Invoke();
++            Close();
++        };
++        vbox.AddChild(_cancelButton);
++    }
++
++    public void UpdateStatus(string serverName, string status, float progress = -1f)
++    {
++        _serverNameLabel.Text = serverName;
++        _statusLabel.Text = status;
++        if (progress >= 0f)
++        {
++            _progressBar.Value = Math.Clamp(progress, 0f, 100f);
++        }
++    }
++}
+diff --git a/Content.Client/Launcher/LauncherAccountWindow.cs b/Content.Client/Launcher/LauncherAccountWindow.cs
+new file mode 100644
+index 0000000000..aff66b2915
+--- /dev/null
++++ b/Content.Client/Launcher/LauncherAccountWindow.cs
+@@ -0,0 +1,182 @@
++using System;
++using System.Numerics;
++using Robust.Client.UserInterface;
++using Robust.Client.UserInterface.Controls;
++using Robust.Client.UserInterface.CustomControls;
++
++namespace Content.Client.Launcher;
++
++public sealed class LauncherAccountWindow : DefaultWindow
++{
++    private readonly BoxContainer _contentContainer;
++    private readonly Label _statusLabel;
++
++    public LauncherAccountWindow()
++    {
++        Title = "Space Station 14 Account";
++        MinSize = new Vector2(380, 260);
++
++        _contentContainer = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Vertical,
++            Margin = new Thickness(12),
++            SeparationOverride = 8
++        };
++        Contents.AddChild(_contentContainer);
++
++        _statusLabel = new Label
++        {
++            FontColorOverride = Color.FromHex("#ff6b6b"),
++            HorizontalAlignment = HAlignment.Center,
++            Visible = false
++        };
++
++        UpdateView();
++        LauncherAuthManager.Instance.OnAuthChanged += UpdateView;
++    }
++
++    protected override void Dispose(bool disposing)
++    {
++        base.Dispose(disposing);
++        LauncherAuthManager.Instance.OnAuthChanged -= UpdateView;
++    }
++
++    private void UpdateView()
++    {
++        _contentContainer.RemoveAllChildren();
++        _statusLabel.Visible = false;
++
++        if (LauncherAuthManager.Instance.IsLoggedIn)
++        {
++            BuildLoggedInView();
++        }
++        else
++        {
++            BuildLoginFormView();
++        }
++
++        _contentContainer.AddChild(_statusLabel);
++    }
++
++    private void BuildLoggedInView()
++    {
++        var header = new Label
++        {
++            Text = "Account Status: Logged In",
++            FontColorOverride = Color.FromHex("#51cf66"),
++            HorizontalAlignment = HAlignment.Center
++        };
++        _contentContainer.AddChild(header);
++
++        var userLabel = new Label
++        {
++            Text = $"Username: {LauncherAuthManager.Instance.CurrentUsername}",
++            Margin = new Thickness(0, 10, 0, 4)
++        };
++        _contentContainer.AddChild(userLabel);
++
++        var idLabel = new Label
++        {
++            Text = $"User ID: {LauncherAuthManager.Instance.CurrentUserId}",
++            FontColorOverride = Color.FromHex("#aaaaaa"),
++            Margin = new Thickness(0, 0, 0, 16)
++        };
++        _contentContainer.AddChild(idLabel);
++
++        var logoutBtn = new Button
++        {
++            Text = "Log Out",
++            StyleClasses = { "negative" },
++            HorizontalAlignment = HAlignment.Center,
++            MinWidth = 140
++        };
++        logoutBtn.OnPressed += _ =>
++        {
++            LauncherAuthManager.Instance.LogOut();
++        };
++        _contentContainer.AddChild(logoutBtn);
++    }
++
++    private void BuildLoginFormView()
++    {
++        var info = new Label
++        {
++            Text = "Log in with your SS14 account to join protected servers.",
++            FontColorOverride = Color.FromHex("#cccccc"),
++            HorizontalAlignment = HAlignment.Center,
++            Margin = new Thickness(0, 0, 0, 8)
++        };
++        _contentContainer.AddChild(info);
++
++        var userLabel = new Label { Text = "Username or Email:" };
++        _contentContainer.AddChild(userLabel);
++
++        var usernameBox = new LineEdit
++        {
++            PlaceHolder = "Enter username or email...",
++            HorizontalExpand = true
++        };
++        _contentContainer.AddChild(usernameBox);
++
++        var passLabel = new Label { Text = "Password:" };
++        _contentContainer.AddChild(passLabel);
++
++        var passwordBox = new LineEdit
++        {
++            PlaceHolder = "Enter password...",
++            HorizontalExpand = true
++        };
++        _contentContainer.AddChild(passwordBox);
++
++        var buttonsRow = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Horizontal,
++            HorizontalAlignment = HAlignment.Center,
++            SeparationOverride = 12,
++            Margin = new Thickness(0, 10, 0, 0)
++        };
++
++        var loginBtn = new Button
++        {
++            Text = "Log In",
++            MinWidth = 110
++        };
++
++        loginBtn.OnPressed += async _ =>
++        {
++            loginBtn.Disabled = true;
++            _statusLabel.Text = "Logging in...";
++            _statusLabel.FontColorOverride = Color.FromHex("#ffdd57");
++            _statusLabel.Visible = true;
++
++            var (success, error) = await LauncherAuthManager.Instance.LogInAsync(usernameBox.Text, passwordBox.Text);
++            loginBtn.Disabled = false;
++
++            if (!success)
++            {
++                _statusLabel.Text = error ?? "Failed to log in.";
++                _statusLabel.FontColorOverride = Color.FromHex("#ff6b6b");
++                _statusLabel.Visible = true;
++            }
++            else
++            {
++                Close();
++            }
++        };
++
++        var guestBtn = new Button
++        {
++            Text = "Guest Mode",
++            MinWidth = 110
++        };
++        guestBtn.OnPressed += _ =>
++        {
++            LauncherAuthManager.Instance.LogOut();
++            Close();
++        };
++
++        buttonsRow.AddChild(loginBtn);
++        buttonsRow.AddChild(guestBtn);
++        _contentContainer.AddChild(buttonsRow);
++    }
++}
+diff --git a/Content.Client/Launcher/LauncherAuthManager.cs b/Content.Client/Launcher/LauncherAuthManager.cs
+new file mode 100644
+index 0000000000..7f673fab60
+--- /dev/null
++++ b/Content.Client/Launcher/LauncherAuthManager.cs
+@@ -0,0 +1,177 @@
++using System;
++using System.IO;
++using System.Net.Http;
++using System.Text;
++using System.Text.Json;
++using System.Text.Json.Nodes;
++using System.Threading.Tasks;
++using Robust.Shared.IoC;
++using Robust.Shared.Network;
++
++namespace Content.Client.Launcher;
++
++public sealed class LauncherAuthManager
++{
++    private static readonly Lazy<LauncherAuthManager> LazyInstance = new(() => new LauncherAuthManager());
++    public static LauncherAuthManager Instance => LazyInstance.Value;
++
++    private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
++
++    public string? CurrentUsername { get; private set; }
++    public Guid? CurrentUserId { get; private set; }
++    public string? CurrentToken { get; private set; }
++
++    public bool IsLoggedIn => !string.IsNullOrEmpty(CurrentToken);
++
++    public event Action? OnAuthChanged;
++
++    private LauncherAuthManager()
++    {
++        _http.DefaultRequestHeaders.UserAgent.ParseAdd("SpaceStation14-Launcher");
++    }
++
++    private static string GetAuthFilePath()
++    {
++        if (OperatingSystem.IsAndroid())
++        {
++            var dir = "/data/data/io.spacestation14.android/files";
++            if (!Directory.Exists(dir))
++                Directory.CreateDirectory(dir);
++            return Path.Combine(dir, "auth.json");
++        }
++
++        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
++        var ss14Dir = Path.Combine(appData, "Space Station 14");
++        if (!Directory.Exists(ss14Dir))
++            Directory.CreateDirectory(ss14Dir);
++        return Path.Combine(ss14Dir, "auth.json");
++    }
++
++    public void LoadSavedAuth()
++    {
++        try
++        {
++            var path = GetAuthFilePath();
++            if (!File.Exists(path))
++                return;
++
++            var json = File.ReadAllText(path);
++            var node = JsonNode.Parse(json);
++            if (node == null)
++                return;
++
++            CurrentToken = node["token"]?.GetValue<string>();
++            CurrentUsername = node["username"]?.GetValue<string>();
++            if (Guid.TryParse(node["userId"]?.GetValue<string>(), out var guid))
++                CurrentUserId = guid;
++
++            ApplyToEngine();
++            OnAuthChanged?.Invoke();
++        }
++        catch (Exception ex)
++        {
++            Console.WriteLine($"[LauncherAuth] Failed to load saved auth: {ex.Message}");
++        }
++    }
++
++    private void ApplyToEngine()
++    {
++        if (IoCManager.Resolve<IAuthManager>() is { } authMan)
++        {
++            authMan.Token = CurrentToken;
++            if (CurrentUserId.HasValue)
++                authMan.UserId = new NetUserId(CurrentUserId.Value);
++            else
++                authMan.UserId = null;
++        }
++    }
++
++    public async Task<(bool Success, string? Error)> LogInAsync(string usernameOrEmail, string password)
++    {
++        if (string.IsNullOrWhiteSpace(usernameOrEmail) || string.IsNullOrWhiteSpace(password))
++            return (false, "Please enter both username and password.");
++
++        try
++        {
++            var body = new JsonObject
++            {
++                ["username"] = usernameOrEmail.Trim(),
++                ["password"] = password,
++                ["tfaCode"] = null
++            };
++
++            var content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json");
++            var response = await _http.PostAsync("https://auth.spacestation14.com/api/auth/authenticate", content);
++            var responseText = await response.Content.ReadAsStringAsync();
++
++            var json = JsonNode.Parse(responseText);
++            if (response.IsSuccessStatusCode && json != null)
++            {
++                CurrentToken = json["token"]?.GetValue<string>();
++                CurrentUsername = json["username"]?.GetValue<string>() ?? usernameOrEmail.Trim();
++                if (Guid.TryParse(json["userId"]?.GetValue<string>(), out var guid))
++                    CurrentUserId = guid;
++
++                SaveAuth();
++                ApplyToEngine();
++                OnAuthChanged?.Invoke();
++                return (true, null);
++            }
++
++            if (json?["errors"] is JsonArray arr && arr.Count > 0)
++            {
++                var sb = new StringBuilder();
++                foreach (var err in arr)
++                {
++                    if (sb.Length > 0) sb.Append("\n");
++                    sb.Append(err?.GetValue<string>());
++                }
++                return (false, sb.ToString());
++            }
++
++            return (false, $"Authentication failed (HTTP {(int)response.StatusCode})");
++        }
++        catch (Exception ex)
++        {
++            return (false, $"Network error: {ex.Message}");
++        }
++    }
++
++    public void LogOut()
++    {
++        CurrentToken = null;
++        CurrentUsername = null;
++        CurrentUserId = null;
++
++        try
++        {
++            var path = GetAuthFilePath();
++            if (File.Exists(path))
++                File.Delete(path);
++        }
++        catch {}
++
++        ApplyToEngine();
++        OnAuthChanged?.Invoke();
++    }
++
++    private void SaveAuth()
++    {
++        try
++        {
++            var obj = new JsonObject
++            {
++                ["token"] = CurrentToken,
++                ["username"] = CurrentUsername,
++                ["userId"] = CurrentUserId?.ToString()
++            };
++
++            var path = GetAuthFilePath();
++            File.WriteAllText(path, obj.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
++        }
++        catch (Exception ex)
++        {
++            Console.WriteLine($"[LauncherAuth] Failed to save auth: {ex.Message}");
++        }
++    }
++}
+diff --git a/Content.Client/Launcher/SS14LauncherWindow.cs b/Content.Client/Launcher/SS14LauncherWindow.cs
+new file mode 100644
+index 0000000000..f391ae62d5
+--- /dev/null
++++ b/Content.Client/Launcher/SS14LauncherWindow.cs
+@@ -0,0 +1,860 @@
++using System;
++using System.Collections.Generic;
++using System.Linq;
++using System.Net.Http;
++using System.Numerics;
++using System.Text.Json;
++using System.Text.Json.Nodes;
++using Robust.Client.UserInterface;
++using Robust.Client.UserInterface.Controls;
++using Robust.Client.UserInterface.CustomControls;
++using Robust.Shared;
++using Robust.Shared.Configuration;
++using Robust.Shared.IoC;
++using Robust.Shared.Maths;
++
++namespace Content.Client.Launcher;
++
++public sealed partial class SS14LauncherWindow : DefaultWindow
++{
++    [Dependency] private IConfigurationManager _cfg = default!;
++    [Dependency] private IUriOpener _uriOpener = default!;
++
++    public event Action<string>? ConnectRequested;
++    public event Action? OpenOptionsRequested;
++    public event Action? OpenChangelogRequested;
++
++    private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
++
++    private readonly Button _navServersBtn;
++    private readonly Button _navDirectConnectBtn;
++    private readonly Button _navOptionsBtn;
++    private readonly Button _navChangelogBtn;
++    private readonly Button _accountBtn;
++
++    private readonly BoxContainer _pagesContainer;
++    private readonly Control _serversPage;
++    private readonly Control _directConnectPage;
++    private readonly Control _optionsPage;
++
++    private readonly LineEdit _searchBar;
++    private readonly CheckBox _hideEmptyCheck;
++    private readonly CheckBox _hideFullCheck;
++    private readonly Button _refreshBtn;
++    private readonly BoxContainer _serverListVBox;
++    private readonly Label _serversStatusLabel;
++
++    private readonly Label _detailNameLabel;
++    private readonly Label _detailPlayersLabel;
++    private readonly Label _detailMapLabel;
++    private readonly Label _detailAddressLabel;
++    private readonly RichTextLabel _detailDescLabel;
++    private readonly Button _detailConnectBtn;
++    private readonly BoxContainer _detailLinksBox;
++
++    private readonly LineEdit _directAddressBox;
++    private readonly Button _directConnectBtn;
++
++    private readonly LineEdit _playerNameBox;
++    private readonly Slider _masterVolumeSlider;
++    private readonly CheckBox _vsyncCheck;
++
++    private readonly List<ServerEntry> _allServers = new();
++    private ServerEntry? _selectedServer;
++
++    private sealed record ServerEntry(
++        string Name,
++        string Address,
++        int Players,
++        int SoftMax,
++        string? Map,
++        string? Preset,
++        List<string> Tags);
++
++    public SS14LauncherWindow()
++    {
++        IoCManager.InjectDependencies(this);
++        _http.DefaultRequestHeaders.UserAgent.ParseAdd("SpaceStation14-Launcher");
++
++        Title = "Space Station 14 Launcher";
++        MinSize = Vector2.Zero;
++        SetSize = new Vector2(750, 480);
++
++        var root = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Vertical,
++            HorizontalExpand = true,
++            VerticalExpand = true,
++            Margin = new Thickness(6),
++            SeparationOverride = 6
++        };
++
++        var navBar = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Horizontal,
++            HorizontalExpand = true,
++            SeparationOverride = 8,
++            Margin = new Thickness(0, 0, 0, 4)
++        };
++
++        var titleLabel = new Label
++        {
++            Text = "SPACE STATION 14",
++            FontColorOverride = Color.FromHex("#ffd43b"),
++            VerticalAlignment = VAlignment.Center,
++            Margin = new Thickness(4, 0, 16, 0)
++        };
++        navBar.AddChild(titleLabel);
++
++        _navServersBtn = new Button { Text = "Servers", MinWidth = 90, ToggleMode = true };
++        _navDirectConnectBtn = new Button { Text = "Direct Connect", MinWidth = 110, ToggleMode = true };
++        _navOptionsBtn = new Button { Text = "Options", MinWidth = 85, ToggleMode = true };
++        _navChangelogBtn = new Button { Text = "Changelog", MinWidth = 95 };
++
++        _navServersBtn.OnPressed += _ => SwitchPage(0);
++        _navDirectConnectBtn.OnPressed += _ => SwitchPage(1);
++        _navOptionsBtn.OnPressed += _ => SwitchPage(2);
++        _navChangelogBtn.OnPressed += _ => OpenChangelogRequested?.Invoke();
++
++        navBar.AddChild(_navServersBtn);
++        navBar.AddChild(_navDirectConnectBtn);
++        navBar.AddChild(_navOptionsBtn);
++        navBar.AddChild(_navChangelogBtn);
++
++        var navSpacer = new Control { HorizontalExpand = true };
++        navBar.AddChild(navSpacer);
++
++        _accountBtn = new Button
++        {
++            Text = "Account: Guest",
++            MinWidth = 130
++        };
++        _accountBtn.OnPressed += _ =>
++        {
++            var accWin = new LauncherAccountWindow();
++            accWin.OpenCentered();
++        };
++        navBar.AddChild(_accountBtn);
++
++        root.AddChild(navBar);
++
++        _pagesContainer = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Vertical,
++            HorizontalExpand = true,
++            VerticalExpand = true
++        };
++
++        _serversPage = BuildServersPage(out _searchBar, out _hideEmptyCheck, out _hideFullCheck, out _refreshBtn,
++            out _serverListVBox, out _serversStatusLabel, out _detailNameLabel, out _detailPlayersLabel,
++            out _detailMapLabel, out _detailAddressLabel, out _detailDescLabel, out _detailConnectBtn, out _detailLinksBox);
++
++        _directConnectPage = BuildDirectConnectPage(out _directAddressBox, out _directConnectBtn);
++
++        _optionsPage = BuildOptionsPage(out _playerNameBox, out _masterVolumeSlider, out _vsyncCheck);
++
++        root.AddChild(_pagesContainer);
++
++        ContentsContainer.AddChild(root);
++
++        UpdateAccountButtonText();
++        LauncherAuthManager.Instance.OnAuthChanged += UpdateAccountButtonText;
++
++        SwitchPage(0);
++
++        RefreshServers();
++    }
++
++    protected override void EnteredTree()
++    {
++        base.EnteredTree();
++        if (Parent != null)
++        {
++            Parent.OnResized += OnParentResized;
++            UpdateLayoutForParent();
++        }
++    }
++
++    protected override void ExitedTree()
++    {
++        if (Parent != null)
++            Parent.OnResized -= OnParentResized;
++        base.ExitedTree();
++    }
++
++    protected override void Opened()
++    {
++        base.Opened();
++        UpdateLayoutForParent();
++    }
++
++    private void OnParentResized() => UpdateLayoutForParent();
++
++    private void UpdateLayoutForParent()
++    {
++        if (Parent == null) return;
++        if (OperatingSystem.IsAndroid())
++        {
++            SetSize = Parent.Size;
++            LayoutContainer.SetPosition(this, Vector2.Zero);
++        }
++        else
++        {
++            SetSize = new Vector2(Math.Min(960, Math.Max(700, Parent.Size.X - 20)), Math.Min(640, Math.Max(460, Parent.Size.Y - 20)));
++            RecenterWindow(new Vector2(0.5f, 0.5f));
++        }
++    }
++
++    protected override void Dispose(bool disposing)
++    {
++        base.Dispose(disposing);
++        LauncherAuthManager.Instance.OnAuthChanged -= UpdateAccountButtonText;
++    }
++
++    private void UpdateAccountButtonText()
++    {
++        if (LauncherAuthManager.Instance.IsLoggedIn)
++        {
++            _accountBtn.Text = $"● {LauncherAuthManager.Instance.CurrentUsername}";
++            _accountBtn.Label.FontColorOverride = Color.FromHex("#51cf66");
++        }
++        else
++        {
++            _accountBtn.Text = "Account: Guest";
++            _accountBtn.Label.FontColorOverride = Color.FromHex("#ced4da");
++        }
++    }
++
++    private void SwitchPage(int index)
++    {
++        _pagesContainer.RemoveAllChildren();
++
++        _navServersBtn.Pressed = index == 0;
++        _navDirectConnectBtn.Pressed = index == 1;
++        _navOptionsBtn.Pressed = index == 2;
++
++        switch (index)
++        {
++            case 0:
++                _pagesContainer.AddChild(_serversPage);
++                break;
++            case 1:
++                _pagesContainer.AddChild(_directConnectPage);
++                break;
++            case 2:
++                _pagesContainer.AddChild(_optionsPage);
++                break;
++        }
++    }
++
++    #region Servers Page
++
++    private Control BuildServersPage(
++        out LineEdit searchBar,
++        out CheckBox hideEmptyCheck,
++        out CheckBox hideFullCheck,
++        out Button refreshBtn,
++        out BoxContainer serverListVBox,
++        out Label serversStatusLabel,
++        out Label detailNameLabel,
++        out Label detailPlayersLabel,
++        out Label detailMapLabel,
++        out Label detailAddressLabel,
++        out RichTextLabel detailDescLabel,
++        out Button detailConnectBtn,
++        out BoxContainer detailLinksBox)
++    {
++        var root = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Vertical,
++            HorizontalExpand = true,
++            VerticalExpand = true,
++            SeparationOverride = 6
++        };
++
++        var filterBar = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Horizontal,
++            HorizontalExpand = true,
++            SeparationOverride = 8
++        };
++
++        searchBar = new LineEdit
++        {
++            PlaceHolder = "Search servers by name, map, gamemode...",
++            HorizontalExpand = true
++        };
++        searchBar.OnTextChanged += _ => FilterServersList();
++        filterBar.AddChild(searchBar);
++
++        hideEmptyCheck = new CheckBox { Text = "Hide Empty" };
++        hideEmptyCheck.OnToggled += _ => FilterServersList();
++        filterBar.AddChild(hideEmptyCheck);
++
++        hideFullCheck = new CheckBox { Text = "Hide Full" };
++        hideFullCheck.OnToggled += _ => FilterServersList();
++        filterBar.AddChild(hideFullCheck);
++
++        refreshBtn = new Button { Text = "Refresh", MinWidth = 80 };
++        refreshBtn.OnPressed += _ => RefreshServers();
++        filterBar.AddChild(refreshBtn);
++
++        root.AddChild(filterBar);
++
++        var split = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Horizontal,
++            HorizontalExpand = true,
++            VerticalExpand = true,
++            SeparationOverride = 8
++        };
++
++        var leftPanel = new PanelContainer
++        {
++            StyleClasses = { "BackgroundPanel" },
++            HorizontalExpand = true,
++            VerticalExpand = true,
++            SizeFlagsStretchRatio = 0.55f
++        };
++
++        var leftVBox = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Vertical,
++            HorizontalExpand = true,
++            VerticalExpand = true,
++            Margin = new Thickness(4)
++        };
++
++        serversStatusLabel = new Label
++        {
++            Text = "Loading servers from Space Station 14 Hub...",
++            HorizontalAlignment = HAlignment.Center,
++            FontColorOverride = Color.FromHex("#ffd43b"),
++            Margin = new Thickness(0, 10, 0, 0)
++        };
++        leftVBox.AddChild(serversStatusLabel);
++
++        var scroll = new ScrollContainer
++        {
++            HorizontalExpand = true,
++            VerticalExpand = true
++        };
++
++        serverListVBox = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Vertical,
++            HorizontalExpand = true,
++            SeparationOverride = 4
++        };
++        scroll.AddChild(serverListVBox);
++        leftVBox.AddChild(scroll);
++        leftPanel.AddChild(leftVBox);
++        split.AddChild(leftPanel);
++
++        var rightPanel = new PanelContainer
++        {
++            StyleClasses = { "BackgroundPanel" },
++            HorizontalExpand = true,
++            VerticalExpand = true,
++            SizeFlagsStretchRatio = 0.45f
++        };
++
++        var rightVBox = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Vertical,
++            HorizontalExpand = true,
++            VerticalExpand = true,
++            Margin = new Thickness(12),
++            SeparationOverride = 8
++        };
++
++        detailNameLabel = new Label
++        {
++            Text = "Select a Server",
++            FontColorOverride = Color.FromHex("#ffd43b"),
++            StyleClasses = { "LabelHeadingBigger" }
++        };
++        rightVBox.AddChild(detailNameLabel);
++
++        detailPlayersLabel = new Label { Text = "Players: -" };
++        detailMapLabel = new Label { Text = "Map: -  |  Mode: -" };
++        detailAddressLabel = new Label { Text = "Address: -", FontColorOverride = Color.FromHex("#888888") };
++
++        rightVBox.AddChild(detailPlayersLabel);
++        rightVBox.AddChild(detailMapLabel);
++        rightVBox.AddChild(detailAddressLabel);
++
++        detailConnectBtn = new Button
++        {
++            Text = "CONNECT",
++            MinWidth = 160,
++            MinHeight = 38,
++            HorizontalAlignment = HAlignment.Left,
++            Margin = new Thickness(0, 4, 0, 8),
++            Disabled = true
++        };
++        detailConnectBtn.OnPressed += _ =>
++        {
++            if (_selectedServer != null)
++                ConnectRequested?.Invoke(_selectedServer.Address);
++        };
++        rightVBox.AddChild(detailConnectBtn);
++
++        detailLinksBox = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Horizontal,
++            SeparationOverride = 8,
++            Margin = new Thickness(0, 0, 0, 4)
++        };
++        rightVBox.AddChild(detailLinksBox);
++
++        var descHeader = new Label
++        {
++            Text = "Description:",
++            FontColorOverride = Color.FromHex("#aaaaaa"),
++            Margin = new Thickness(0, 4, 0, 0)
++        };
++        rightVBox.AddChild(descHeader);
++
++        var descScroll = new ScrollContainer
++        {
++            HorizontalExpand = true,
++            VerticalExpand = true
++        };
++
++        detailDescLabel = new RichTextLabel
++        {
++            HorizontalExpand = true,
++            VerticalExpand = true
++        };
++        descScroll.AddChild(detailDescLabel);
++        rightVBox.AddChild(descScroll);
++
++        rightPanel.AddChild(rightVBox);
++        split.AddChild(rightPanel);
++
++        root.AddChild(split);
++        return root;
++    }
++
++    public async void RefreshServers()
++    {
++        _serversStatusLabel.Visible = true;
++        _serversStatusLabel.Text = "Fetching servers from hub...";
++        _refreshBtn.Disabled = true;
++        _serverListVBox.RemoveAllChildren();
++        _allServers.Clear();
++
++        try
++        {
++            var json = await _http.GetStringAsync("https://hub.spacestation14.com/api/servers");
++            var array = JsonNode.Parse(json)?.AsArray();
++
++            if (array == null || array.Count == 0)
++            {
++                _serversStatusLabel.Text = "No servers received from hub.";
++                return;
++            }
++
++            foreach (var node in array)
++            {
++                if (node == null) continue;
++                var address = node["address"]?.GetValue<string>() ?? "";
++                var status = node["statusData"];
++                if (status == null) continue;
++
++                var name = status["name"]?.GetValue<string>() ?? "Unknown Server";
++                var players = status["players"]?.GetValue<int>() ?? 0;
++                var softMax = status["soft_max_players"]?.GetValue<int>() ?? 0;
++                var map = status["map"]?.GetValue<string>();
++                var preset = status["preset"]?.GetValue<string>();
++
++                var tagsList = new List<string>();
++                if (status["tags"] is JsonArray tagsArray)
++                {
++                    foreach (var t in tagsArray)
++                    {
++                        var tagStr = t?.GetValue<string>();
++                        if (!string.IsNullOrEmpty(tagStr))
++                            tagsList.Add(tagStr);
++                    }
++                }
++
++                _allServers.Add(new ServerEntry(name, address, players, softMax, map, preset, tagsList));
++            }
++
++            _allServers.Sort((a, b) => b.Players.CompareTo(a.Players));
++            _serversStatusLabel.Visible = false;
++            FilterServersList();
++
++            if (_allServers.Count > 0)
++                SelectServer(_allServers[0]);
++        }
++        catch (Exception ex)
++        {
++            _serversStatusLabel.Text = $"Error loading servers: {ex.Message}";
++        }
++        finally
++        {
++            _refreshBtn.Disabled = false;
++        }
++    }
++
++    private void FilterServersList()
++    {
++        _serverListVBox.RemoveAllChildren();
++
++        var query = _searchBar.Text.Trim().ToLowerInvariant();
++        var hideEmpty = _hideEmptyCheck.Pressed;
++        var hideFull = _hideFullCheck.Pressed;
++
++        var filtered = _allServers.Where(s =>
++        {
++            if (hideEmpty && s.Players == 0) return false;
++            if (hideFull && s.SoftMax > 0 && s.Players >= s.SoftMax) return false;
++            if (!string.IsNullOrEmpty(query))
++            {
++                var matchesName = s.Name.ToLowerInvariant().Contains(query);
++                var matchesMap = s.Map?.ToLowerInvariant().Contains(query) ?? false;
++                var matchesPreset = s.Preset?.ToLowerInvariant().Contains(query) ?? false;
++                var matchesTag = s.Tags.Any(t => t.ToLowerInvariant().Contains(query));
++                if (!matchesName && !matchesMap && !matchesPreset && !matchesTag)
++                    return false;
++            }
++            return true;
++        }).ToList();
++
++        if (filtered.Count == 0)
++        {
++            _serverListVBox.AddChild(new Label
++            {
++                Text = "No servers match current filter.",
++                HorizontalAlignment = HAlignment.Center,
++                Margin = new Thickness(0, 10, 0, 0)
++            });
++            return;
++        }
++
++        foreach (var server in filtered)
++        {
++            var itemBtn = new ContainerButton
++            {
++                HorizontalExpand = true,
++                Margin = new Thickness(2, 1)
++            };
++
++            var row = new BoxContainer
++            {
++                Orientation = BoxContainer.LayoutOrientation.Horizontal,
++                HorizontalExpand = true,
++                SeparationOverride = 8,
++                Margin = new Thickness(6, 4)
++            };
++
++            var nameBox = new BoxContainer
++            {
++                Orientation = BoxContainer.LayoutOrientation.Vertical,
++                HorizontalExpand = true,
++                SeparationOverride = 2
++            };
++
++            var nameLbl = new Label
++            {
++                Text = server.Name,
++                FontColorOverride = Color.White,
++                ClipText = true
++            };
++            nameBox.AddChild(nameLbl);
++
++            var metaText = $"{(string.IsNullOrEmpty(server.Preset) ? "Survival" : server.Preset)} • Map: {server.Map ?? "Station"}";
++            var metaLbl = new Label
++            {
++                Text = metaText,
++                FontColorOverride = Color.FromHex("#aaaaaa"),
++                StyleClasses = { "LabelSmall" },
++                ClipText = true
++            };
++            nameBox.AddChild(metaLbl);
++            row.AddChild(nameBox);
++
++            var countText = server.SoftMax > 0 ? $"{server.Players}/{server.SoftMax}" : $"{server.Players}";
++            var countColor = server.Players > 0 ? Color.FromHex("#51cf66") : Color.FromHex("#888888");
++
++            var countLbl = new Label
++            {
++                Text = countText,
++                FontColorOverride = countColor,
++                VerticalAlignment = VAlignment.Center,
++                MinWidth = 55
++            };
++            row.AddChild(countLbl);
++
++            var joinBtn = new Button
++            {
++                Text = "Join",
++                MinWidth = 65,
++                StyleClasses = { "ButtonSmall" },
++                VerticalAlignment = VAlignment.Center
++            };
++            joinBtn.OnPressed += _ => ConnectRequested?.Invoke(server.Address);
++            row.AddChild(joinBtn);
++
++            itemBtn.AddChild(row);
++            itemBtn.OnPressed += _ => SelectServer(server);
++
++            _serverListVBox.AddChild(itemBtn);
++        }
++    }
++
++    private async void SelectServer(ServerEntry server)
++    {
++        _selectedServer = server;
++        _detailNameLabel.Text = server.Name;
++        _detailPlayersLabel.Text = server.SoftMax > 0 ? $"Players: {server.Players} / {server.SoftMax}" : $"Players: {server.Players}";
++        _detailMapLabel.Text = $"Map: {server.Map ?? "Unknown"}  |  Mode: {server.Preset ?? "Unknown"}";
++        _detailAddressLabel.Text = $"Address: {server.Address}";
++        _detailConnectBtn.Disabled = false;
++        _detailLinksBox.RemoveAllChildren();
++        _detailDescLabel.SetMessage("Loading server details...");
++
++        try
++        {
++            var infoUrl = CleanAddressForHttp(server.Address) + "/info";
++            var infoJson = await _http.GetStringAsync(infoUrl);
++            var node = JsonNode.Parse(infoJson);
++            if (node == null) return;
++
++            var desc = node["desc"]?.GetValue<string>() ?? "No description provided.";
++            _detailDescLabel.SetMessage(desc);
++
++            if (node["links"] is JsonArray links)
++            {
++                foreach (var link in links)
++                {
++                    if (link == null) continue;
++                    var linkName = link["name"]?.GetValue<string>() ?? "Link";
++                    var linkUrl = link["url"]?.GetValue<string>();
++                    if (string.IsNullOrEmpty(linkUrl)) continue;
++
++                    var btn = new Button
++                    {
++                        Text = linkName,
++                        StyleClasses = { "ButtonSmall" }
++                    };
++                    btn.OnPressed += _ =>
++                    {
++                        if (Uri.TryCreate(linkUrl, UriKind.Absolute, out var uri))
++                            _uriOpener.OpenUri(uri);
++                    };
++                    _detailLinksBox.AddChild(btn);
++                }
++            }
++        }
++        catch
++        {
++            _detailDescLabel.SetMessage("Connected to server info endpoint unavailable or timed out.");
++        }
++    }
++
++    private static string CleanAddressForHttp(string address)
++    {
++        var addr = address.Trim();
++        if (addr.StartsWith("ss14s://", StringComparison.OrdinalIgnoreCase))
++            addr = "https://" + addr["ss14s://".Length..];
++        else if (addr.StartsWith("ss14://", StringComparison.OrdinalIgnoreCase))
++            addr = "http://" + addr["ss14://".Length..];
++        else if (!addr.StartsWith("http://", StringComparison.OrdinalIgnoreCase) && !addr.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
++            addr = "http://" + addr;
++
++        return addr.TrimEnd('/');
++    }
++
++    #endregion
++
++    #region Direct Connect Page
++
++    private Control BuildDirectConnectPage(out LineEdit directAddressBox, out Button directConnectBtn)
++    {
++        var root = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Vertical,
++            HorizontalAlignment = HAlignment.Center,
++            VerticalAlignment = VAlignment.Center,
++            SeparationOverride = 16,
++            MinWidth = 420
++        };
++
++        var panel = new PanelContainer
++        {
++            StyleClasses = { "BackgroundPanel" },
++            Margin = new Thickness(16)
++        };
++
++        var vbox = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Vertical,
++            SeparationOverride = 12,
++            Margin = new Thickness(20)
++        };
++
++        var title = new Label
++        {
++            Text = "Direct Connect",
++            StyleClasses = { "LabelHeadingBigger" },
++            FontColorOverride = Color.FromHex("#ffd43b"),
++            HorizontalAlignment = HAlignment.Center
++        };
++        vbox.AddChild(title);
++
++        var subtitle = new Label
++        {
++            Text = "Enter a Space Station 14 server address:",
++            FontColorOverride = Color.FromHex("#ced4da"),
++            HorizontalAlignment = HAlignment.Center
++        };
++        vbox.AddChild(subtitle);
++
++        var box = new LineEdit
++        {
++            PlaceHolder = "ss14://server.example.com:1212",
++            HorizontalExpand = true,
++            Text = "localhost"
++        };
++        directAddressBox = box;
++        vbox.AddChild(box);
++
++        directConnectBtn = new Button
++        {
++            Text = "CONNECT",
++            MinHeight = 40,
++            HorizontalAlignment = HAlignment.Center,
++            MinWidth = 160
++        };
++        directConnectBtn.OnPressed += _ =>
++        {
++            if (!string.IsNullOrWhiteSpace(box.Text))
++                ConnectRequested?.Invoke(box.Text.Trim());
++        };
++        vbox.AddChild(directConnectBtn);
++
++        panel.AddChild(vbox);
++        root.AddChild(panel);
++        return root;
++    }
++
++    #endregion
++
++    #region Options Page
++
++    private Control BuildOptionsPage(out LineEdit playerNameBox, out Slider masterVolumeSlider, out CheckBox vsyncCheck)
++    {
++        var root = new ScrollContainer
++        {
++            HorizontalExpand = true,
++            VerticalExpand = true
++        };
++
++        var vbox = new BoxContainer
++        {
++            Orientation = BoxContainer.LayoutOrientation.Vertical,
++            SeparationOverride = 16,
++            Margin = new Thickness(20),
++            HorizontalAlignment = HAlignment.Center,
++            MinWidth = 460
++        };
++
++        var playerSection = new Label { Text = "Player Profile", StyleClasses = { "LabelHeadingBigger" }, FontColorOverride = Color.FromHex("#ffd43b") };
++        vbox.AddChild(playerSection);
++
++        var playerRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 10 };
++        playerRow.AddChild(new Label { Text = "Character Name:", VerticalAlignment = VAlignment.Center, MinWidth = 130 });
++        playerNameBox = new LineEdit
++        {
++            Text = _cfg.GetCVar(CVars.PlayerName),
++            HorizontalExpand = true
++        };
++        playerNameBox.OnTextChanged += args =>
++        {
++            _cfg.SetCVar(CVars.PlayerName, args.Text);
++            _cfg.SaveToFile();
++        };
++        playerRow.AddChild(playerNameBox);
++        vbox.AddChild(playerRow);
++
++        var gfxSection = new Label { Text = "Graphics & Performance", StyleClasses = { "LabelHeadingBigger" }, FontColorOverride = Color.FromHex("#ffd43b"), Margin = new Thickness(0, 10, 0, 0) };
++        vbox.AddChild(gfxSection);
++
++        var fpsRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 10 };
++        fpsRow.AddChild(new Label { Text = "FPS Limit:", VerticalAlignment = VAlignment.Center, MinWidth = 130 });
++        var fps30 = new Button { Text = "30 FPS", MinWidth = 70 };
++        var fps60 = new Button { Text = "60 FPS", MinWidth = 70 };
++        var fpsMax = new Button { Text = "Max", MinWidth = 70 };
++        fps30.OnPressed += _ => { _cfg.SetCVar(CVars.DisplayMaxFPS, 30); _cfg.SaveToFile(); };
++        fps60.OnPressed += _ => { _cfg.SetCVar(CVars.DisplayMaxFPS, 60); _cfg.SaveToFile(); };
++        fpsMax.OnPressed += _ => { _cfg.SetCVar(CVars.DisplayMaxFPS, 0); _cfg.SaveToFile(); };
++        fpsRow.AddChild(fps30);
++        fpsRow.AddChild(fps60);
++        fpsRow.AddChild(fpsMax);
++        vbox.AddChild(fpsRow);
++
++        var lightRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 10 };
++        lightRow.AddChild(new Label { Text = "Lighting Quality:", VerticalAlignment = VAlignment.Center, MinWidth = 130 });
++        var lightLow = new Button { Text = "Mobile (0.35x)", MinWidth = 90 };
++        var lightMed = new Button { Text = "Balanced (0.5x)", MinWidth = 90 };
++        var lightHigh = new Button { Text = "Full (1.0x)", MinWidth = 90 };
++        lightLow.OnPressed += _ => { _cfg.SetCVar(CVars.LightResolutionScale, 0.35f); _cfg.SaveToFile(); };
++        lightMed.OnPressed += _ => { _cfg.SetCVar(CVars.LightResolutionScale, 0.50f); _cfg.SaveToFile(); };
++        lightHigh.OnPressed += _ => { _cfg.SetCVar(CVars.LightResolutionScale, 1.0f); _cfg.SaveToFile(); };
++        lightRow.AddChild(lightLow);
++        lightRow.AddChild(lightMed);
++        lightRow.AddChild(lightHigh);
++        vbox.AddChild(lightRow);
++
++        vsyncCheck = new CheckBox
++        {
++            Text = "Vertical Sync (VSync)",
++            Pressed = _cfg.GetCVar(CVars.DisplayVSync)
++        };
++        vsyncCheck.OnToggled += args =>
++        {
++            _cfg.SetCVar(CVars.DisplayVSync, args.Pressed);
++            _cfg.SaveToFile();
++        };
++        vbox.AddChild(vsyncCheck);
++
++        var audioSection = new Label { Text = "Audio", StyleClasses = { "LabelHeadingBigger" }, FontColorOverride = Color.FromHex("#ffd43b"), Margin = new Thickness(0, 10, 0, 0) };
++        vbox.AddChild(audioSection);
++
++        var volRow = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 10 };
++        volRow.AddChild(new Label { Text = "Master Volume:", VerticalAlignment = VAlignment.Center, MinWidth = 130 });
++        masterVolumeSlider = new Slider
++        {
++            MinValue = 0f,
++            MaxValue = 100f,
++            Value = _cfg.GetCVar(CVars.AudioMasterVolume) * 100f,
++            HorizontalExpand = true
++        };
++        masterVolumeSlider.OnValueChanged += args =>
++        {
++            _cfg.SetCVar(CVars.AudioMasterVolume, args.Value / 100f);
++            _cfg.SaveToFile();
++        };
++        volRow.AddChild(masterVolumeSlider);
++        vbox.AddChild(volRow);
++
++        var advBtn = new Button
++        {
++            Text = "Open Advanced Options Window",
++            HorizontalAlignment = HAlignment.Center,
++            MinWidth = 220,
++            Margin = new Thickness(0, 16, 0, 0)
++        };
++        advBtn.OnPressed += _ => OpenOptionsRequested?.Invoke();
++        vbox.AddChild(advBtn);
++
++        root.AddChild(vbox);
++        return root;
++    }
++
++    #endregion
++}
+diff --git a/Content.Client/Launcher/ServerContentDownloader.cs b/Content.Client/Launcher/ServerContentDownloader.cs
+new file mode 100644
+index 0000000000..c09418afaa
+--- /dev/null
++++ b/Content.Client/Launcher/ServerContentDownloader.cs
+@@ -0,0 +1,218 @@
++using System;
++using System.IO;
++using System.Net.Http;
++using System.Reflection;
++using System.Security.Cryptography;
++using System.Text.Json;
++using System.Text.Json.Nodes;
++using System.Threading;
++using System.Threading.Tasks;
++using Robust.Shared.ContentPack;
++using Robust.Shared.IoC;
++using Robust.Shared.Log;
++using Robust.Shared.Utility;
++
++namespace Content.Client.Launcher;
++
++public sealed record ContentDownloadProgress(
++    long BytesDownloaded,
++    long TotalBytes,
++    double ProgressPercent,
++    double SpeedMegaBytesPerSec);
++
++public sealed record ServerBuildInfo(
++    string ForkId,
++    string Version,
++    string DownloadUrl,
++    string Hash);
++
++public sealed partial class ServerContentDownloader
++{
++    [Dependency] private IResourceManager _resManager = default!;
++    [Dependency] private ILogManager _logManager = default!;
++
++    private readonly HttpClient _http = new();
++    private ISawmill _sawmill = default!;
++
++    public ServerContentDownloader()
++    {
++        IoCManager.InjectDependencies(this);
++        _sawmill = _logManager.GetSawmill("content_dl");
++        _http.DefaultRequestHeaders.UserAgent.ParseAdd("SpaceStation14-Mobile-Launcher");
++        _http.Timeout = TimeSpan.FromMinutes(15);
++    }
++
++    public async Task<ServerBuildInfo?> FetchServerBuildInfoAsync(string address, CancellationToken cancel = default)
++    {
++        var cleanAddress = address.Trim();
++        var isSecure = cleanAddress.StartsWith("ss14s://", StringComparison.OrdinalIgnoreCase);
++        var stripped = cleanAddress;
++        if (isSecure)
++            stripped = cleanAddress[8..].TrimEnd('/');
++        else if (cleanAddress.StartsWith("ss14://", StringComparison.OrdinalIgnoreCase))
++            stripped = cleanAddress[7..].TrimEnd('/');
++        else if (cleanAddress.StartsWith("udp://", StringComparison.OrdinalIgnoreCase))
++            stripped = cleanAddress[6..].TrimEnd('/');
++
++        var urls = new List<string>();
++        if (isSecure)
++        {
++            urls.Add($"https://{stripped}/info");
++            urls.Add($"http://{stripped}/info");
++        }
++        else
++        {
++            urls.Add($"http://{stripped}/info");
++            urls.Add($"https://{stripped}/info");
++        }
++
++        foreach (var url in urls)
++        {
++            try
++            {
++                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancel);
++                cts.CancelAfter(TimeSpan.FromSeconds(6));
++
++                var res = await _http.GetStringAsync(url, cts.Token);
++                var node = JsonNode.Parse(res);
++                if (node == null)
++                    continue;
++
++                var buildNode = node["build"];
++                if (buildNode == null)
++                    continue;
++
++                var downloadUrl = buildNode["download_url"]?.GetValue<string>()
++                    ?? buildNode["manifest_download_url"]?.GetValue<string>();
++
++                var hash = buildNode["hash"]?.GetValue<string>()
++                    ?? buildNode["manifest_hash"]?.GetValue<string>()
++                    ?? "";
++
++                var forkId = buildNode["fork_id"]?.GetValue<string>() ?? "space-station-14";
++                var version = buildNode["version"]?.GetValue<string>() ?? "latest";
++
++                if (!string.IsNullOrEmpty(downloadUrl))
++                {
++                    return new ServerBuildInfo(forkId, version, downloadUrl, hash);
++                }
++            }
++            catch
++            {
++            }
++        }
++
++        return null;
++    }
++
++    public async Task<string?> DownloadAndMountContentAsync(
++        ServerBuildInfo build,
++        Action<ContentDownloadProgress>? progressCallback = null,
++        CancellationToken cancel = default)
++    {
++        try
++        {
++            var cacheDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Space Station 14", "cache", "builds");
++            if (!Directory.Exists(cacheDir))
++            {
++                Directory.CreateDirectory(cacheDir);
++            }
++
++            var safeHash = string.IsNullOrEmpty(build.Hash)
++                ? $"{build.ForkId}_{build.Version}".Replace('/', '_').Replace('\\', '_')
++                : build.Hash.ToUpperInvariant();
++
++            var targetFile = Path.Combine(cacheDir, $"{safeHash}.zip");
++            var tempFile = Path.Combine(cacheDir, $"{safeHash}.tmp");
++
++            if (File.Exists(targetFile) && new FileInfo(targetFile).Length > 0)
++            {
++                _sawmill.Info($"Found cached content pack: {targetFile}");
++                progressCallback?.Invoke(new ContentDownloadProgress(100, 100, 100.0, 0.0));
++                MountContent(targetFile);
++                return targetFile;
++            }
++
++            _sawmill.Info($"Downloading content pack from {build.DownloadUrl} -> {targetFile}...");
++
++            using var response = await _http.GetAsync(build.DownloadUrl, HttpCompletionOption.ResponseHeadersRead, cancel);
++            response.EnsureSuccessStatusCode();
++
++            var totalBytes = response.Content.Headers.ContentLength ?? -1L;
++            await using var stream = await response.Content.ReadAsStreamAsync(cancel);
++            await using var fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 65536, true);
++
++            var buffer = new byte[65536];
++            long bytesDownloaded = 0;
++            var startTime = DateTime.UtcNow;
++            var lastReportTime = startTime;
++            using var sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
++
++            int read;
++            while ((read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancel)) > 0)
++            {
++                await fileStream.WriteAsync(buffer.AsMemory(0, read), cancel);
++                sha.AppendData(buffer, 0, read);
++                bytesDownloaded += read;
++
++                var now = DateTime.UtcNow;
++                if ((now - lastReportTime).TotalMilliseconds >= 200)
++                {
++                    lastReportTime = now;
++                    var elapsedSec = (now - startTime).TotalSeconds;
++                    var mbPerSec = elapsedSec > 0 ? (bytesDownloaded / (1024.0 * 1024.0)) / elapsedSec : 0.0;
++                    var percent = totalBytes > 0 ? Math.Min(100.0, (bytesDownloaded * 100.0) / totalBytes) : 0.0;
++                    progressCallback?.Invoke(new ContentDownloadProgress(bytesDownloaded, totalBytes, percent, mbPerSec));
++                }
++            }
++
++            await fileStream.FlushAsync(cancel);
++            fileStream.Close();
++
++            if (!string.IsNullOrEmpty(build.Hash))
++            {
++                var hashBytes = sha.GetHashAndReset();
++                var calculatedHash = Convert.ToHexString(hashBytes).ToUpperInvariant();
++                if (!string.Equals(calculatedHash, build.Hash, StringComparison.OrdinalIgnoreCase))
++                {
++                    _sawmill.Warning($"Content pack hash mismatch! Expected {build.Hash}, got {calculatedHash}. File kept but flagged.");
++                }
++            }
++
++            if (File.Exists(targetFile))
++                File.Delete(targetFile);
++
++            File.Move(tempFile, targetFile);
++            _sawmill.Info($"Content pack successfully downloaded: {targetFile}");
++
++            progressCallback?.Invoke(new ContentDownloadProgress(bytesDownloaded, totalBytes, 100.0, 0.0));
++            MountContent(targetFile);
++            return targetFile;
++        }
++        catch (Exception ex)
++        {
++            _sawmill.Error($"Error downloading content pack: {ex}");
++            throw;
++        }
++    }
++
++    private void MountContent(string zipPath)
++    {
++        try
++        {
++            foreach (var m in _resManager.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance))
++            {
++                if (m.Name == "MountContentPack" && m.GetParameters().Length == 2 && m.GetParameters()[0].ParameterType == typeof(string))
++                {
++                    m.Invoke(_resManager, new object?[] { zipPath, null });
++                    _sawmill.Info($"Mounted content pack into VFS: {zipPath}");
++                    return;
++                }
++            }
++        }
++        catch (Exception ex)
++        {
++            _sawmill.Error($"Failed to mount content pack {zipPath}: {ex.Message}");
++        }
++    }
++}
+diff --git a/Content.Client/Lobby/LobbyState.cs b/Content.Client/Lobby/LobbyState.cs
+index b5373e0622..7c8f1790c5 100644
+--- a/Content.Client/Lobby/LobbyState.cs
++++ b/Content.Client/Lobby/LobbyState.cs
+@@ -7,6 +7,7 @@
+ using Content.Client.UserInterface.Systems.Chat;
+ using Content.Client.Voting;
+ using Content.Shared.CCVar;
++using SixLabors.ImageSharp;
+ using Robust.Client;
+ using Robust.Client.Console;
+ using Robust.Client.ResourceManagement;
+diff --git a/Content.Client/MainMenu/MainMenu.cs b/Content.Client/MainMenu/MainMenu.cs
+index 78a2876632..2dbfd9fde1 100644
+--- a/Content.Client/MainMenu/MainMenu.cs
++++ b/Content.Client/MainMenu/MainMenu.cs
+@@ -1,4 +1,10 @@
++using System;
++using System.IO;
++using System.Net.Http;
++using System.Text.Json.Nodes;
+ using System.Text.RegularExpressions;
++using System.Threading.Tasks;
++using Content.Client.Launcher;
+ using Content.Client.MainMenu.UI;
+ using Content.Client.UserInterface.Systems.EscapeMenu;
+ using Robust.Client;
+@@ -26,38 +32,61 @@ public sealed partial class MainScreen : Robust.Client.State.State
+         [Dependency] private IResourceCache _resourceCache = default!;
+         [Dependency] private IUserInterfaceManager _userInterfaceManager = default!;
+         [Dependency] private ILogManager _logManager = default!;
++        [Dependency] private IAuthManager _authManager = default!;
+ 
+         private ISawmill _sawmill = default!;
+ 
+         private MainMenuControl _mainMenuControl = default!;
++        private SS14LauncherWindow? _launcherWindow;
++        private ConnectingOverlay? _connectingOverlay;
+         private bool _isConnecting;
+ 
++        public static MainScreen? Instance { get; private set; }
++
++        public void ConnectTo(string address)
++        {
++            TryConnect(address);
++        }
++
+         // ReSharper disable once InconsistentNaming
+         private static readonly Regex IPv6Regex = new(@"\[(.*:.*:.*)](?::(\d+))?");
+ 
+         /// <inheritdoc />
+         protected override void Startup()
+         {
++            Instance = this;
+             _sawmill = _logManager.GetSawmill("mainmenu");
+ 
++            LauncherAuthManager.Instance.LoadSavedAuth();
++
+             _mainMenuControl = new MainMenuControl(_resourceCache, _configurationManager);
+             _userInterfaceManager.StateRoot.AddChild(_mainMenuControl);
+ 
+             _mainMenuControl.QuitButton.OnPressed += QuitButtonPressed;
+             _mainMenuControl.OptionsButton.OnPressed += OptionsButtonPressed;
+             _mainMenuControl.DirectConnectButton.OnPressed += DirectConnectButtonPressed;
++            _mainMenuControl.ServersButton.OnPressed += ServersButtonPressed;
+             _mainMenuControl.AddressBox.OnTextEntered += AddressBoxEntered;
+             _mainMenuControl.ChangelogButton.OnPressed += ChangelogButtonPressed;
+ 
+             _client.RunLevelChanged += RunLevelChanged;
++            _netManager.ClientConnectStateChanged += OnClientConnectStateChanged;
++
++            OpenLauncherWindow();
+         }
+ 
+         /// <inheritdoc />
+         protected override void Shutdown()
+         {
++            if (Instance == this)
++                Instance = null;
++
+             _client.RunLevelChanged -= RunLevelChanged;
+             _netManager.ConnectFailed -= _onConnectFailed;
++            _netManager.ClientConnectStateChanged -= OnClientConnectStateChanged;
+ 
++            _connectingOverlay?.Dispose();
++            _launcherWindow?.Dispose();
+             _mainMenuControl.Dispose();
+         }
+ 
+@@ -82,6 +111,30 @@ private void DirectConnectButtonPressed(BaseButton.ButtonEventArgs args)
+             TryConnect(input.Text);
+         }
+ 
++        private void ServersButtonPressed(BaseButton.ButtonEventArgs args)
++        {
++            OpenLauncherWindow();
++        }
++
++        private void OpenLauncherWindow()
++        {
++            if (_launcherWindow == null || _launcherWindow.Disposed)
++            {
++                _launcherWindow = new SS14LauncherWindow();
++                _launcherWindow.ConnectRequested += addr =>
++                {
++                    _mainMenuControl.AddressBox.Text = addr;
++                    _launcherWindow.Close();
++                    TryConnect(addr);
++                };
++                _launcherWindow.OpenOptionsRequested += () => _userInterfaceManager.GetUIController<OptionsUIController>().ToggleWindow();
++                _launcherWindow.OpenChangelogRequested += () => _userInterfaceManager.GetUIController<ChangelogUIController>().ToggleWindow();
++            }
++
++            _launcherWindow.Open();
++            _launcherWindow.MoveToFront();
++        }
++
+         private void AddressBoxEntered(LineEdit.LineEditEventArgs args)
+         {
+             if (_isConnecting)
+@@ -92,9 +145,18 @@ private void AddressBoxEntered(LineEdit.LineEditEventArgs args)
+             TryConnect(args.Text);
+         }
+ 
+-        private void TryConnect(string address)
++        private async void TryConnect(string address)
+         {
+-            var inputName = _mainMenuControl.UsernameBox.Text.Trim();
++            var inputName = LauncherAuthManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(LauncherAuthManager.Instance.CurrentUsername)
++                ? LauncherAuthManager.Instance.CurrentUsername
++                : _mainMenuControl.UsernameBox.Text.Trim();
++
++            if (string.IsNullOrEmpty(inputName) || inputName == "JoeGenero")
++            {
++                inputName = "wolzuNN3";
++            }
++            _mainMenuControl.UsernameBox.Text = inputName;
++
+             if (!UsernameHelpers.IsNameValid(inputName, out var reason))
+             {
+                 var invalidReason = Loc.GetString(reason.ToText());
+@@ -111,22 +173,156 @@ private void TryConnect(string address)
+                 _configurationManager.SaveToFile();
+             }
+ 
++            if (string.IsNullOrEmpty(_authManager.Token) && !string.IsNullOrEmpty(LauncherAuthManager.Instance.CurrentToken))
++            {
++                _authManager.Token = LauncherAuthManager.Instance.CurrentToken;
++                if (LauncherAuthManager.Instance.CurrentUserId.HasValue)
++                    _authManager.UserId = new NetUserId(LauncherAuthManager.Instance.CurrentUserId.Value);
++            }
++
++            try { File.AppendAllText("/data/data/io.spacestation14.android/files/connect_log.txt", $"{DateTime.UtcNow:O} TryConnect to {address}, user: {inputName}, token: {!string.IsNullOrEmpty(_authManager.Token)}\n"); } catch { }
++
+             _setConnectingState(true);
+             _netManager.ConnectFailed += _onConnectFailed;
++            _authManager.PubKey = null;
++
++            if (_connectingOverlay == null || _connectingOverlay.Disposed)
++            {
++                _connectingOverlay = new ConnectingOverlay();
++                _connectingOverlay.OnCancel += () =>
++                {
++                    _client.DisconnectFromServer("User cancelled");
++                    _setConnectingState(false);
++                };
++            }
++            _connectingOverlay.UpdateStatus(address, "Resolving server...", 15f);
++            _connectingOverlay.OpenCentered();
++
+             try
+             {
+-                ParseAddress(address, out var ip, out var port);
++                var (ip, port) = await ResolveServerEndpointAsync(address);
++                if (!_isConnecting)
++                    return;
++
++                _connectingOverlay.UpdateStatus($"{ip}:{port}", "Checking server content...", 20f);
++                try
++                {
++                    var downloader = new ServerContentDownloader();
++                    var buildInfo = await downloader.FetchServerBuildInfoAsync(address);
++                    if (buildInfo != null && !string.IsNullOrEmpty(buildInfo.DownloadUrl))
++                    {
++                        _connectingOverlay.UpdateStatus($"{ip}:{port}", "Downloading server content...", 25f);
++                        await downloader.DownloadAndMountContentAsync(buildInfo, progress =>
++                        {
++                            _userInterfaceManager.DeferAction(() =>
++                            {
++                                if (_connectingOverlay != null && !_connectingOverlay.Disposed)
++                                {
++                                    var mbRead = progress.BytesDownloaded / (1024.0 * 1024.0);
++                                    var mbTotal = progress.TotalBytes / (1024.0 * 1024.0);
++                                    var status = progress.TotalBytes > 0
++                                        ? $"Downloading content: {mbRead:F1}/{mbTotal:F1} MB ({progress.ProgressPercent:F0}%) @ {progress.SpeedMegaBytesPerSec:F1} MB/s"
++                                        : $"Downloading content: {mbRead:F1} MB @ {progress.SpeedMegaBytesPerSec:F1} MB/s";
++                                    _connectingOverlay.UpdateStatus($"{ip}:{port}", status, (float)progress.ProgressPercent);
++                                }
++                            });
++                        });
++                    }
++                }
++                catch (Exception dlEx)
++                {
++                    _sawmill.Warning($"Content download error: {dlEx.Message}. Attempting to connect with local content.");
++                    try { File.AppendAllText("/data/data/io.spacestation14.android/files/connect_log.txt", $"{DateTime.UtcNow:O} Download error: {dlEx.Message}\n"); } catch { }
++                }
++
++                _connectingOverlay.UpdateStatus($"{ip}:{port}", "Connecting to server...", 35f);
++                try { File.AppendAllText("/data/data/io.spacestation14.android/files/connect_log.txt", $"{DateTime.UtcNow:O} Calling ConnectToServer({ip}, {port})\n"); } catch { }
+                 _client.ConnectToServer(ip, port);
+             }
+-            catch (ArgumentException e)
++            catch (Exception e)
+             {
++                var msg = $"Connect exception: {e}";
++                _sawmill.Warning(msg);
++                try { File.AppendAllText("/data/data/io.spacestation14.android/files/connect_log.txt", $"{DateTime.UtcNow:O} {msg}\n"); } catch { }
++                _connectingOverlay?.Close();
+                 _userInterfaceManager.Popup($"Unable to connect: {e.Message}", "Connection error.");
+-                _sawmill.Warning(e.ToString());
+                 _netManager.ConnectFailed -= _onConnectFailed;
+                 _setConnectingState(false);
+             }
+         }
+ 
++        private void OnClientConnectStateChanged(ClientConnectionState state)
++        {
++            try { File.AppendAllText("/data/data/io.spacestation14.android/files/connect_log.txt", $"{DateTime.UtcNow:O} ClientConnectionState: {state}\n"); } catch { }
++            _userInterfaceManager.DeferAction(() =>
++            {
++                if (_connectingOverlay == null || _connectingOverlay.Disposed)
++                    return;
++
++                var text = state switch
++                {
++                    ClientConnectionState.ResolvingHost => "Resolving host...",
++                    ClientConnectionState.EstablishingConnection => "Establishing connection...",
++                    ClientConnectionState.Handshake => "Authenticating & handshaking...",
++                    ClientConnectionState.Connected => "Connected! Loading game...",
++                    _ => "Connecting..."
++                };
++                var progress = state switch
++                {
++                    ClientConnectionState.ResolvingHost => 35f,
++                    ClientConnectionState.EstablishingConnection => 60f,
++                    ClientConnectionState.Handshake => 85f,
++                    ClientConnectionState.Connected => 100f,
++                    _ => 20f
++                };
++                _connectingOverlay.UpdateStatus(_connectingOverlay.ServerName, text, progress);
++            });
++        }
++
++        private async Task<(string ip, ushort port)> ResolveServerEndpointAsync(string address)
++        {
++            address = address.Trim();
++
++            if (address.StartsWith("ss14s://", StringComparison.OrdinalIgnoreCase) ||
++                address.StartsWith("ss14://", StringComparison.OrdinalIgnoreCase))
++            {
++                var isSecure = address.StartsWith("ss14s://", StringComparison.OrdinalIgnoreCase);
++                var scheme = isSecure ? "https://" : "http://";
++                var stripped = address[(isSecure ? 8 : 7)..].TrimEnd('/');
++                var rawUrl = scheme + stripped;
++
++                try
++                {
++                    using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(6) };
++                    var infoUrl = rawUrl + "/info";
++                    var resp = await http.GetStringAsync(infoUrl);
++                    var json = JsonNode.Parse(resp);
++                    if (json != null)
++                    {
++                        var pubKey = json["auth"]?["public_key"]?.GetValue<string>();
++                        if (!string.IsNullOrEmpty(pubKey))
++                        {
++                            _authManager.PubKey = pubKey;
++                        }
++
++                        var connectAddr = json["connect_address"]?.GetValue<string>();
++                        if (!string.IsNullOrEmpty(connectAddr))
++                        {
++                            ParseAddress(connectAddr, out var resolvedIp, out var resolvedPort);
++                            return (resolvedIp, resolvedPort);
++                        }
++                    }
++                }
++                catch (Exception ex)
++                {
++                    _sawmill.Warning($"Failed to query status info from {rawUrl}: {ex.Message}");
++                }
++            }
++
++            ParseAddress(address, out var ip, out var port);
++            return (ip, port);
++        }
++
+         private void RunLevelChanged(object? obj, RunLevelChangedEventArgs args)
+         {
+             switch (args.NewLevel)
+@@ -134,15 +330,41 @@ private void RunLevelChanged(object? obj, RunLevelChangedEventArgs args)
+                 case ClientRunLevel.Connecting:
+                     _setConnectingState(true);
+                     break;
++                case ClientRunLevel.Connected:
++                    _connectingOverlay?.Close();
++                    _launcherWindow?.Close();
++                    break;
+                 case ClientRunLevel.Initialize:
++                    _connectingOverlay?.Close();
+                     _setConnectingState(false);
+                     _netManager.ConnectFailed -= _onConnectFailed;
++                    var disconnectReason = _client.LastDisconnectReason;
++                    if (!string.IsNullOrEmpty(disconnectReason))
++                    {
++                        var msg = $"Disconnected from server: {disconnectReason}";
++                        _sawmill.Warning(msg);
++                        try { File.AppendAllText("/data/data/io.spacestation14.android/files/connect_log.txt", $"{DateTime.UtcNow:O} {msg}\n"); } catch { }
++                        _userInterfaceManager.Popup(disconnectReason, "Disconnected");
++                    }
+                     break;
+             }
+         }
+ 
+         private void ParseAddress(string address, out string ip, out ushort port)
+         {
++            address = address.Trim();
++
++            if (address.StartsWith("ss14://", StringComparison.OrdinalIgnoreCase))
++                address = address.Substring(7);
++            else if (address.StartsWith("ss14s://", StringComparison.OrdinalIgnoreCase))
++                address = address.Substring(8);
++            else if (address.StartsWith("udp://", StringComparison.OrdinalIgnoreCase))
++                address = address.Substring(6);
++
++            var slashIdx = address.IndexOf('/');
++            if (slashIdx >= 0)
++                address = address.Substring(0, slashIdx);
++
+             var match6 = IPv6Regex.Match(address);
+             if (match6 != Match.Empty)
+             {
+@@ -181,7 +403,11 @@ private void ParseAddress(string address, out string ip, out ushort port)
+ 
+         private void _onConnectFailed(object? _, NetConnectFailArgs args)
+         {
+-            _userInterfaceManager.Popup(Loc.GetString("main-menu-failed-to-connect",("reason", args.Reason)));
++            var msg = $"Connect failed: {args.Reason}";
++            _sawmill.Error(msg);
++            try { File.AppendAllText("/data/data/io.spacestation14.android/files/connect_log.txt", $"{DateTime.UtcNow:O} {msg}\n"); } catch { }
++            _connectingOverlay?.Close();
++            _userInterfaceManager.Popup(Loc.GetString("main-menu-failed-to-connect", ("reason", args.Reason)), "Connect Failed");
+             _netManager.ConnectFailed -= _onConnectFailed;
+             _setConnectingState(false);
+         }
+@@ -190,6 +416,7 @@ private void _setConnectingState(bool state)
+         {
+             _isConnecting = state;
+             _mainMenuControl.DirectConnectButton.Disabled = state;
++            _mainMenuControl.ServersButton.Disabled = state;
+         }
+     }
+ }
+diff --git a/Content.Client/MainMenu/UI/MainMenuControl.xaml b/Content.Client/MainMenu/UI/MainMenuControl.xaml
+index 17a3e95449..2de07c7601 100644
+--- a/Content.Client/MainMenu/UI/MainMenuControl.xaml
++++ b/Content.Client/MainMenu/UI/MainMenuControl.xaml
+@@ -1,4 +1,4 @@
+-﻿<Control xmlns="https://spacestation14.io"
++<Control xmlns="https://spacestation14.io"
+          xmlns:pllax="clr-namespace:Content.Client.Parallax"
+          xmlns:clog="clr-namespace:Content.Client.Changelog"
+          xmlns:system="clr-namespace:System;assembly=System.Runtime">
+@@ -45,6 +45,12 @@
+                         TextAlign="Center"
+                         StyleClasses="OpenLeft"
+                         StyleIdentifier="mainMenu" />
++                <Button Name="ServersButton"
++                        Access="Public"
++                        Text="Servers"
++                        TextAlign="Center"
++                        StyleClasses="OpenBoth"
++                        StyleIdentifier="mainMenu" />
+                 <clog:ChangelogButton
+                     Name="ChangelogButton"
+                     StyleIdentifier="mainMenu"
+diff --git a/Content.Client/MainMenu/UI/MainMenuControl.xaml.cs b/Content.Client/MainMenu/UI/MainMenuControl.xaml.cs
+index 2de90acde4..3ebb1b915e 100644
+--- a/Content.Client/MainMenu/UI/MainMenuControl.xaml.cs
++++ b/Content.Client/MainMenu/UI/MainMenuControl.xaml.cs
+@@ -55,7 +55,15 @@ public MainMenuControl(IResourceCache resCache, IConfigurationManager configMan)
+         var logoTexture = resCache.GetResource<TextureResource>("/Textures/Logo/logo.png");
+         Logo.Texture = logoTexture;
+ 
+-        var currentUserName = configMan.GetCVar(CVars.PlayerName);
+-        UsernameBox.Text = currentUserName;
++        if (Launcher.LauncherAuthManager.Instance.IsLoggedIn && !string.IsNullOrEmpty(Launcher.LauncherAuthManager.Instance.CurrentUsername))
++        {
++            UsernameBox.Text = Launcher.LauncherAuthManager.Instance.CurrentUsername;
++            configMan.SetCVar(CVars.PlayerName, Launcher.LauncherAuthManager.Instance.CurrentUsername);
++        }
++        else
++        {
++            var currentUserName = configMan.GetCVar(CVars.PlayerName);
++            UsernameBox.Text = currentUserName;
++        }
+     }
+ }
+diff --git a/Content.Client/MainMenu/UI/ServerBrowserWindow.cs b/Content.Client/MainMenu/UI/ServerBrowserWindow.cs
+new file mode 100644
+index 0000000000..152a014586
+--- /dev/null
++++ b/Content.Client/MainMenu/UI/ServerBrowserWindow.cs
+@@ -0,0 +1,232 @@
++using System;
++using System.Collections.Generic;
++using System.Linq;
++using System.Net.Http;
++using System.Numerics;
++using System.Text.Json;
++using Robust.Client.UserInterface;
++using Robust.Client.UserInterface.Controls;
++using Robust.Client.UserInterface.CustomControls;
++using Robust.Shared.Maths;
++
++namespace Content.Client.MainMenu.UI
++{
++    public sealed class ServerBrowserWindow : DefaultWindow
++    {
++        public event Action<string>? ServerSelected;
++
++        private readonly LineEdit _searchBar;
++        private readonly Button _refreshButton;
++        private readonly BoxContainer _serverListContainer;
++        private readonly Label _statusLabel;
++        private readonly List<ServerInfo> _allServers = new();
++
++        private sealed record ServerInfo(string Name, string Address, int Players, int MaxPlayers, string? Map);
++
++        public ServerBrowserWindow()
++        {
++            Title = "Server Browser";
++            MinSize = SetSize = new Vector2(700, 500);
++
++            var rootBox = new BoxContainer
++            {
++                Orientation = BoxContainer.LayoutOrientation.Vertical,
++                SeparationOverride = 8,
++                HorizontalExpand = true,
++                VerticalExpand = true,
++                Margin = new Thickness(8)
++            };
++
++            var topBar = new BoxContainer
++            {
++                Orientation = BoxContainer.LayoutOrientation.Horizontal,
++                SeparationOverride = 8,
++                HorizontalExpand = true
++            };
++
++            _searchBar = new LineEdit
++            {
++                PlaceHolder = "Search by server name, mode, language...",
++                HorizontalExpand = true
++            };
++            _searchBar.OnTextChanged += _ => RebuildList();
++
++            _refreshButton = new Button
++            {
++                Text = "Refresh"
++            };
++            _refreshButton.OnPressed += _ => RefreshServers();
++
++            topBar.AddChild(_searchBar);
++            topBar.AddChild(_refreshButton);
++            rootBox.AddChild(topBar);
++
++            _statusLabel = new Label
++            {
++                Text = "Loading servers from hub...",
++                HorizontalAlignment = HAlignment.Center
++            };
++            rootBox.AddChild(_statusLabel);
++
++            var scroll = new ScrollContainer
++            {
++                HorizontalExpand = true,
++                VerticalExpand = true
++            };
++
++            _serverListContainer = new BoxContainer
++            {
++                Orientation = BoxContainer.LayoutOrientation.Vertical,
++                SeparationOverride = 6,
++                HorizontalExpand = true
++            };
++
++            scroll.AddChild(_serverListContainer);
++            rootBox.AddChild(scroll);
++
++            ContentsContainer.AddChild(rootBox);
++
++            RefreshServers();
++        }
++
++        public async void RefreshServers()
++        {
++            _statusLabel.Visible = true;
++            _statusLabel.Text = "Fetching servers from hub...";
++            _refreshButton.Disabled = true;
++            _serverListContainer.RemoveAllChildren();
++
++            try
++            {
++                using var client = new HttpClient();
++                client.Timeout = TimeSpan.FromSeconds(10);
++                var json = await client.GetStringAsync("https://hub.spacestation14.com/api/servers");
++
++                using var doc = JsonDocument.Parse(json);
++                _allServers.Clear();
++
++                foreach (var el in doc.RootElement.EnumerateArray())
++                {
++                    try
++                    {
++                        var address = el.GetProperty("address").GetString();
++                        if (string.IsNullOrEmpty(address))
++                            continue;
++
++                        var status = el.GetProperty("statusData");
++                        var name = status.GetProperty("name").GetString() ?? "Unknown Server";
++                        var players = status.TryGetProperty("players", out var p) ? p.GetInt32() : 0;
++                        var maxPlayers = status.TryGetProperty("soft_max_players", out var mp) ? mp.GetInt32() : 0;
++                        var map = status.TryGetProperty("map", out var m) ? m.GetString() : null;
++
++                        _allServers.Add(new ServerInfo(name, address, players, maxPlayers, map));
++                    }
++                    catch {}
++                }
++
++                _allServers.Sort((a, b) => b.Players.CompareTo(a.Players));
++                _statusLabel.Visible = false;
++                RebuildList();
++            }
++            catch (Exception ex)
++            {
++                _statusLabel.Visible = true;
++                _statusLabel.Text = $"Failed to load servers: {ex.Message}";
++            }
++            finally
++            {
++                _refreshButton.Disabled = false;
++            }
++        }
++
++        private void RebuildList()
++        {
++            _serverListContainer.RemoveAllChildren();
++            var filter = _searchBar.Text.Trim();
++
++            var filtered = string.IsNullOrEmpty(filter)
++                ? _allServers
++                : _allServers.Where(s => s.Name.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
++                                         s.Address.Contains(filter, StringComparison.OrdinalIgnoreCase));
++
++            var count = 0;
++            foreach (var server in filtered)
++            {
++                count++;
++                var panel = new PanelContainer
++                {
++                    HorizontalExpand = true,
++                    Margin = new Thickness(2)
++                };
++
++                var row = new BoxContainer
++                {
++                    Orientation = BoxContainer.LayoutOrientation.Horizontal,
++                    HorizontalExpand = true,
++                    SeparationOverride = 10,
++                    Margin = new Thickness(6)
++                };
++
++                var infoBox = new BoxContainer
++                {
++                    Orientation = BoxContainer.LayoutOrientation.Vertical,
++                    HorizontalExpand = true,
++                    SeparationOverride = 2
++                };
++
++                var titleLabel = new Label
++                {
++                    Text = server.Name,
++                    FontColorOverride = Color.White
++                };
++                infoBox.AddChild(titleLabel);
++
++                var subtitleText = $"{server.Address}";
++                if (!string.IsNullOrEmpty(server.Map))
++                    subtitleText += $" • Map: {server.Map}";
++
++                var addrLabel = new Label
++                {
++                    Text = subtitleText,
++                    FontColorOverride = Color.FromHex("#A0A0A0")
++                };
++                infoBox.AddChild(addrLabel);
++
++                var playerLabel = new Label
++                {
++                    Text = $"{server.Players}/{server.MaxPlayers}",
++                    FontColorOverride = server.Players > 0 ? Color.FromHex("#70FF70") : Color.FromHex("#888888"),
++                    VerticalAlignment = VAlignment.Center
++                };
++
++                var connectBtn = new Button
++                {
++                    Text = "Connect",
++                    VerticalAlignment = VAlignment.Center
++                };
++                var targetAddr = server.Address;
++                connectBtn.OnPressed += _ =>
++                {
++                    ServerSelected?.Invoke(targetAddr);
++                    Close();
++                };
++
++                row.AddChild(infoBox);
++                row.AddChild(playerLabel);
++                row.AddChild(connectBtn);
++
++                panel.AddChild(row);
++                _serverListContainer.AddChild(panel);
++            }
++
++            if (count == 0 && _allServers.Count > 0)
++            {
++                _serverListContainer.AddChild(new Label
++                {
++                    Text = "No servers matched your filter.",
++                    HorizontalAlignment = HAlignment.Center
++                });
++            }
++        }
++    }
++}
+diff --git a/Content.Client/Program.cs b/Content.Client/Program.cs
+index 0404e825cf..74b4e6ed56 100644
+--- a/Content.Client/Program.cs
++++ b/Content.Client/Program.cs
+@@ -7,7 +7,7 @@ internal static class Program
+         [STAThread]
+         public static void Main(string[] args)
+         {
+-            ContentStart.Start(args);
++            ContentStart.StartLibrary(args, new GameControllerOptions { Sandboxing = false });
+         }
+     }
+ }
+diff --git a/Content.Client/UserInterface/Systems/Chat/ChatUIController.cs b/Content.Client/UserInterface/Systems/Chat/ChatUIController.cs
+index ad9233c4ef..242ee8c102 100644
+--- a/Content.Client/UserInterface/Systems/Chat/ChatUIController.cs
++++ b/Content.Client/UserInterface/Systems/Chat/ChatUIController.cs
+@@ -230,11 +230,19 @@ public override void Initialize()
+         gameplayStateLoad.OnScreenLoad += OnScreenLoad;
+         gameplayStateLoad.OnScreenUnload += OnScreenUnload;
+ 
+-        var nameColors = _prototypeManager.Index(ChatNamePalette).Colors.Values.ToArray();
+-        _chatNameColors = new string[nameColors.Length];
+-        for (var i = 0; i < nameColors.Length; i++)
++        if (_prototypeManager.TryIndex(ChatNamePalette, out var palette))
+         {
+-            _chatNameColors[i] = nameColors[i].ToHex();
++            var nameColors = palette.Colors.Values.ToArray();
++            _chatNameColors = new string[nameColors.Length];
++            for (var i = 0; i < nameColors.Length; i++)
++            {
++                _chatNameColors[i] = nameColors[i].ToHex();
++            }
++        }
++        else
++        {
++            _chatNameColors = new[] { "#ffffff" };
++            _chatNameColorsEnabled = false;
+         }
+ 
+         _config.OnValueChanged(CCVars.ChatWindowOpacity, OnChatWindowOpacityChanged);
+diff --git a/Content.Client/UserInterface/Systems/Info/InfoUIController.cs b/Content.Client/UserInterface/Systems/Info/InfoUIController.cs
+index 5a8a804cb9..946c786205 100644
+--- a/Content.Client/UserInterface/Systems/Info/InfoUIController.cs
++++ b/Content.Client/UserInterface/Systems/Info/InfoUIController.cs
+@@ -92,8 +92,14 @@ public GuideEntryPrototype GetCoreRuleEntry()
+     {
+         if (!_prototype.TryIndex(RulesEntryId, out var guideEntryPrototype))
+         {
+-            guideEntryPrototype = _prototype.Index(DefaultRuleset);
+-            Log.Error($"Couldn't find the following prototype: {RulesEntryId}. Falling back to {DefaultRuleset}, please check that the server has the rules set up correctly");
++            if (!_prototype.TryIndex(DefaultRuleset, out guideEntryPrototype))
++            {
++                guideEntryPrototype = System.Linq.Enumerable.FirstOrDefault(_prototype.EnumeratePrototypes<GuideEntryPrototype>())!;
++            }
++            else
++            {
++                Log.Error($"Couldn't find the following prototype: {RulesEntryId}. Falling back to {DefaultRuleset}, please check that the server has the rules set up correctly");
++            }
+             return guideEntryPrototype;
+         }
+ 
+diff --git a/Content.Client/Viewport/ScalingViewport.cs b/Content.Client/Viewport/ScalingViewport.cs
+index 23498ead99..d0460a5c13 100644
+--- a/Content.Client/Viewport/ScalingViewport.cs
++++ b/Content.Client/Viewport/ScalingViewport.cs
+@@ -1,9 +1,13 @@
+ using System;
+ using System.Collections.Generic;
+ using System.Numerics;
++using Content.Client.Movement.Systems;
+ using Content.Shared.CCVar;
++using Content.Shared.Movement.Components;
++using Content.Shared.Movement.Systems;
+ using Robust.Client.Graphics;
+ using Robust.Client.Input;
++using Robust.Client.Player;
+ using Robust.Client.UserInterface;
+ using Robust.Client.UserInterface.CustomControls;
+ using Robust.Shared.Configuration;
+@@ -27,6 +31,7 @@ public sealed partial class ScalingViewport : Control, IViewportControl
+         [Dependency] private IClyde _clyde = default!;
+         [Dependency] private IEntityManager _entityManager = default!;
+         [Dependency] private IInputManager _inputManager = default!;
++        [Dependency] private IPlayerManager _playerManager = default!;
+         [Dependency] private IPrototypeManager _prototypeManager = default!;
+         [Dependency] private IConfigurationManager _cfg = default!;
+ 
+@@ -160,6 +165,26 @@ protected override void KeyBindUp(GUIBoundKeyEventArgs args)
+             _inputManager.ViewportKeyEvent(this, args);
+         }
+ 
++        protected override void MouseWheel(GUIMouseWheelEventArgs args)
++        {
++            base.MouseWheel(args);
++
++            if (args.Handled)
++                return;
++
++            if (_entityManager.TrySystem<ContentEyeSystem>(out var eyeSystem) &&
++                _playerManager.LocalEntity is { } player &&
++                _entityManager.TryGetComponent<ContentEyeComponent>(player, out var eyeComp))
++            {
++                var zoomMod = SharedContentEyeSystem.ZoomMod;
++                var newZoom = args.Delta.Y > 0
++                    ? eyeComp.TargetZoom / zoomMod
++                    : eyeComp.TargetZoom * zoomMod;
++                eyeSystem.RequestZoom(player, newZoom, false, false, eyeComp);
++                args.Handle();
++            }
++        }
++
+         protected override void Draw(IRenderHandle handle)
+         {
+             EnsureViewportCreated();
+diff --git a/Content.Shared/Maps/TurfSystem.cs b/Content.Shared/Maps/TurfSystem.cs
+index 620187a74d..d218fe8104 100644
+--- a/Content.Shared/Maps/TurfSystem.cs
++++ b/Content.Shared/Maps/TurfSystem.cs
+@@ -187,8 +187,6 @@ public bool IsSpace(Tile tile)
+             return _tileHasMapAtmosphere[typeId];
+ 
+         var tileDef = GetContentTileDefinition(tile);
+-        DebugTools.Assert(false, $"Found non-cached tilemap atmosphere for ID {tile.TypeId}: {tileDef.ID}");
+-
+         // Tile IDs are normally stable after startup but keep this in case shit breaks.
+         return tileDef.MapAtmosphere;
+     }
+@@ -220,7 +218,13 @@ public EntityCoordinates GetTileCenter(TileRef turf)
+     [Pure]
+     public ContentTileDefinition GetContentTileDefinition(Tile tile)
+     {
+-        return (ContentTileDefinition)_tileDefinitions[tile.TypeId];
++        if ((uint) tile.TypeId < (uint) _tileDefinitions.Count && _tileDefinitions[tile.TypeId] is ContentTileDefinition def)
++            return def;
++
++        if (_tileDefinitions.Count > 0 && _tileDefinitions[0] is ContentTileDefinition spaceDef)
++            return spaceDef;
++
++        throw new KeyNotFoundException($"No valid tile definition found for tile TypeId {tile.TypeId}");
+     }
+ 
+     /// <summary>

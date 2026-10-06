@@ -1,0 +1,64 @@
+<Project>
+  <Target Name="_BuildApkEmbed" DependsOnTargets="_ProcessAssemblyCompressionFailures" Inputs="$(_BuildApkEmbedInputs)" Outputs="$(_BuildApkEmbedOutputs)" Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
+    <PropertyGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
+      <_ApkOutputPath>$(ApkFileIntermediate)</_ApkOutputPath>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
+      <_ApkOutputPath>$(_BaseZipIntermediate)</_ApkOutputPath>
+    </PropertyGroup>
+    <CreateAssemblyStore Condition=" '$(_AndroidRuntime)' != 'NativeAOT' " TargetRuntime="$(_AndroidRuntime)" AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)" IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)" ResolvedFrameworkAssemblies="@(_BuildApkResolvedFrameworkAssemblies)" ResolvedUserAssemblies="@(_BuildApkResolvedUserAssemblies)" SupportedAbis="@(_BuildTargetAbis)" UseAssemblyStore="$(_AndroidUseAssemblyStore)">
+      <Output TaskParameter="AssembliesToAddToArchive" ItemName="_BuildApkAssembliesToAddToArchive" />
+    </CreateAssemblyStore>
+    <WrapAssembliesAsSharedLibraries Condition=" '$(_AndroidRuntime)' != 'NativeAOT' " AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)" IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)" IntermediateOutputPath="$(IntermediateOutputPath)" ResolvedAssemblies="@(_BuildApkAssembliesToAddToArchive)" SupportedAbis="@(_BuildTargetAbis)" UseAssemblyStore="$(_AndroidUseAssemblyStore)" RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
+      <Output TaskParameter="WrappedAssemblies" ItemName="FilesToAddToArchive" />
+    </WrapAssembliesAsSharedLibraries>
+    <CollectDalvikFilesForArchive AndroidPackageFormat="$(AndroidPackageFormat)" DalvikClasses="@(_DexFile)">
+      <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+    </CollectDalvikFilesForArchive>
+    <CollectJarContentFilesForArchive AndroidPackageFormat="$(AndroidPackageFormat)" ExcludeFiles="@(AndroidPackagingOptionsExclude)" IncludeFiles="@(AndroidPackagingOptionsInclude)" JavaSourceFiles="@(AndroidJavaSource)" JavaLibraries="@(AndroidJavaLibrary)" LibraryProjectJars="@(ExtractedJarImports)">
+      <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+    </CollectJarContentFilesForArchive>
+    <CollectRuntimeConfigFilesForArchive Condition=" '$(_AndroidRuntime)' == 'MonoVM' " AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)" IntermediateOutputPath="$(IntermediateOutputPath)" RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)" SupportedAbis="@(_BuildTargetAbis)" RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
+      <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+    </CollectRuntimeConfigFilesForArchive>
+    <CollectNativeFilesForArchive AndroidNdkDirectory="$(_AndroidNdkDirectory)" ApkOutputPath="$(_ApkOutputPath)" StripNativeLibraries="$(_AndroidStripNativeLibraries)" BundleNativeLibraries="$(_BundleResultNativeLibraries)" FrameworkNativeLibraries="@(FrameworkNativeLibrary)" NativeLibraries="@(AndroidNativeLibrary)" ApplicationSharedLibraries="@(_ApplicationSharedLibrary)" AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)" SupportedAbis="@(_BuildTargetAbis)" IncludeWrapSh="$(AndroidIncludeWrapSh)" CheckedBuild="$(_AndroidCheckedBuild)" ZipAlignmentPages="$(AndroidZipAlignment)" AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)" IntermediateOutputPath="$(IntermediateOutputPath)" RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
+      <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
+      <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+      <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
+    </CollectNativeFilesForArchive>
+    <Delete Files="$(_ApkOutputPath)" Condition="Exists('$(_ApkOutputPath)')" />
+    <BuildArchive AndroidPackageFormat="$(AndroidPackageFormat)" ApkInputPath="$(_PackagedResources)" ApkOutputPath="$(_ApkOutputPath)" FilesToAddToArchive="@(FilesToAddToArchive)" UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)" UseLibZipSharp="$(_AndroidUseLibZipSharp)" ZipFlushFilesLimit="$(_ZipFlushFilesLimit)" ZipFlushSizeLimit="$(_ZipFlushSizeLimit)" />
+    <RemoveDir Directories="@(DSODirectoriesToDelete)" ContinueOnError="WarnAndContinue" />
+    <BuildAppBundle Condition=" '$(AndroidPackageFormat)' == 'aab' " ToolPath="$(JavaToolPath)" JavaMaximumHeapSize="$(JavaMaximumHeapSize)" JavaOptions="$(JavaOptions)" JarPath="$(AndroidBundleToolJarPath)" BaseZip="$(_BaseZipIntermediate)" Modules="@(AndroidAppBundleModules)" Output="$(_AppBundleIntermediate)" UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)" CustomBuildConfigFile="$(AndroidBundleConfigurationFile)" MetaDataFiles="@(AndroidAppBundleMetaDataFile)" IntermediateOutputPath="$(IntermediateOutputPath)" AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)" />
+  </Target>
+
+  <Target Name="_CleanMonoAndroidIntermediateDir">
+  </Target>
+
+  <Target Name="_CompileJava"
+    DependsOnTargets="$(_CompileJavaDependsOnTargets);_CollectJavaSource"
+    Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidCompileJavaFileList);$(MonoPlatformJarPath);@(_JavaStubFiles);@(_JavaSource)"
+    Outputs="$(_AndroidCompileJavaStampFile)">
+
+    <RemoveDir Directories="$(_AndroidIntermediateJavaClassDirectory)" ContinueOnError="WarnAndContinue" />
+    <Delete Files="$(_AndroidIntermediateClassesZip)" ContinueOnError="WarnAndContinue" />
+
+    <Javac
+        JavaPlatformJarPath="$(JavaPlatformJarPath)"
+        ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
+        ClassesZip="$(_AndroidIntermediateClassesZip)"
+        StubSourceDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
+        JavaSourceFiles="@(_JavaSource)"
+        ToolPath="$(JavacToolPath)"
+        ToolExe="$(JavacToolExe)"
+        Jars="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
+        JavacTargetVersion="$(JavacTargetVersion)"
+        JavacSourceVersion="$(JavacSourceVersion)"
+        JdkVersion="$(_JdkVersion)"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
+        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+    />
+
+    <Touch Files="$(_AndroidCompileJavaStampFile)" AlwaysCreate="true" />
+  </Target>
+</Project>
