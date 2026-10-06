@@ -135,7 +135,7 @@ if [ ! -f "$OUT_DIR/libsodium.so" ]; then
     export LIBSODIUM_FULL_BUILD=1
     ./dist-build/android-armv8-a.sh
   )
-  find "$SODIUM_SRC/libsodium-android-armv8-a" -name "libsodium.so" -exec cp {} "$OUT_DIR/libsodium.so" \;
+  find "$SODIUM_SRC" -name "libsodium.so" -exec cp {} "$OUT_DIR/libsodium.so" \;
   echo "Libsodium built successfully"
 else
   echo "Libsodium already built"
