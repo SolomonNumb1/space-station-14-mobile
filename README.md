@@ -8,8 +8,8 @@ Android port of [Space Station 14](https://github.com/space-wizards/space-statio
 > This android port is NOT  provided or supported by Space Wizards Federation,and at that moment more like proof of work
 > 
 > * **use at your own risk:** Stability, controls, and performance may vary depending on your device
-> * **Do not report mobile specific issues (crashes, low fps, ui bugs) via in game ahelp or to the official Wizard's Den staff **
-> * If you encounter bugs or performance problems related to the Android build, please report them directly in the section issues of this repository
+> * **Do not report mobile specific issues (crashes, low fps, ui bugs) via in game ahelp or to the official Wizard's Den staff**
+> * If you encounter bugs or performance problems related to the Android build, please report them directly in the section [issues](https://github.com/SolomonNumb1/space-station-14-mobile/issues) of this repository
 
 
 ## Server Compatibility
