@@ -10,7 +10,7 @@ Android port of [Space Station 14](https://github.com/space-wizards/space-statio
 > * **use at your own risk:** Stability, controls, and performance may vary depending on your device
 > * **Do not report mobile specific issues (crashes, low fps, ui bugs) via in game ahelp or to the official Wizard's Den staff**
 > * If you encounter bugs or performance problems related to the Android build, please report them directly in the section [issues](https://github.com/SolomonNumb1/space-station-14-mobile/issues) of this repository
-NEVERTHELESS , the project will be supported and improved 
+> NEVERTHELESS , the project will be supported and improved 
 
 ## Server Compatibility
 - Can only join servers running the exact same build version as this APK (Space Station 14 / RobustToolbox v291)
