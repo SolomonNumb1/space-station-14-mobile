@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
@@ -97,6 +98,15 @@ public sealed class LauncherActivity : Activity
         ApplyImmersiveMode();
         BuildOfficialUi();
         _ = RefreshHubServersAsync();
+
+        if (!_storage.Data.DisclaimerAccepted)
+        {
+            ShowDisclaimerDialog();
+        }
+        else
+        {
+            _ = CheckForUpdatesAsync();
+        }
     }
 
     protected override void OnResume()
@@ -188,6 +198,9 @@ public sealed class LauncherActivity : Activity
 
         var websiteBtn = CreateHeaderLinkButton("Website", () => OpenUrl("https://spacestation14.com"));
         header.AddView(websiteBtn);
+
+        var githubBtn = CreateHeaderLinkButton("GitHub", () => OpenUrl("https://github.com/SolomonNumb1/space-station-14-mobile"));
+        header.AddView(githubBtn);
 
         _accountBtn = new Button(this)
         {
@@ -337,8 +350,23 @@ public sealed class LauncherActivity : Activity
         sandboxBtn.Background = LauncherTheme.CreateBox(LauncherTheme.ControlMid, 3);
         sandboxBtn.SetTextColor(LauncherTheme.Foreground);
         sandboxBtn.SetPadding((int)(10 * density), 0, (int)(10 * density), 0);
+        var sandboxLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
+        sandboxLp.SetMargins(0, 0, (int)(8 * density), 0);
+        sandboxBtn.LayoutParameters = sandboxLp;
         sandboxBtn.Click += (_, _) => LaunchOfflineSandbox();
         bottomBar.AddView(sandboxBtn);
+
+        var versionBtn = new Button(this)
+        {
+            Text = GetCurrentAppVersion(),
+            TextSize = 10
+        };
+        versionBtn.Background = LauncherTheme.CreateBox(LauncherTheme.ControlMid, 3);
+        versionBtn.SetTextColor(LauncherTheme.SubText);
+        versionBtn.SetPadding((int)(8 * density), 0, (int)(8 * density), 0);
+        versionBtn.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
+        versionBtn.Click += async (_, _) => await CheckForUpdatesAsync(userInitiated: true);
+        bottomBar.AddView(versionBtn);
 
         mainLayout.AddView(bottomBar);
         root.AddView(mainLayout);
@@ -1760,5 +1788,278 @@ public sealed class LauncherActivity : Activity
             StartActivity(intent);
         }
         catch {}
+    }
+
+    public const string CurrentAppVersion = "v1.0.1";
+
+    public string GetCurrentAppVersion()
+    {
+        try
+        {
+            var pInfo = PackageManager?.GetPackageInfo(PackageName ?? "", 0);
+            if (!string.IsNullOrEmpty(pInfo?.VersionName))
+            {
+                var ver = pInfo.VersionName.Trim();
+                return ver.StartsWith("v", StringComparison.OrdinalIgnoreCase) ? ver : "v" + ver;
+            }
+        }
+        catch {}
+        return CurrentAppVersion;
+    }
+
+    private void ShowDisclaimerDialog()
+    {
+        var builder = new AlertDialog.Builder(this);
+        var density = Resources?.DisplayMetrics?.Density ?? 1f;
+
+        var scroll = new ScrollView(this);
+        var view = new LinearLayout(this)
+        {
+            Orientation = Orientation.Vertical
+        };
+        view.SetBackgroundColor(LauncherTheme.PopupBackground);
+        view.SetPadding((int)(20 * density), (int)(16 * density), (int)(20 * density), (int)(16 * density));
+
+        var title = new TextView(this)
+        {
+            Text = "Unofficial Mobile Client",
+            TextSize = 16,
+            Typeface = Typeface.DefaultBold
+        };
+        title.SetTextColor(LauncherTheme.NanoGold);
+        title.SetPadding(0, 0, 0, (int)(10 * density));
+        view.AddView(title);
+
+        var msgText = new TextView(this)
+        {
+            Text = "This Space Station 14 Android port is an UNOFFICIAL, community-driven client modification (proof of concept).\n\n" +
+                   "• It is NOT developed, provided, or supported by Wizard's Den or Space Wizards Federation.\n\n" +
+                   "• Play at your own risk: Stability, controls, and performance vary depending on your device.\n\n" +
+                   "• DO NOT report mobile-specific issues (crashes, low FPS, touch UI bugs) via in-game 'ahelp' or to official Wizard's Den staff/mentors.\n\n" +
+                   "• If you encounter bugs or performance problems, report them directly to the GitHub Issues section.",
+            TextSize = 12
+        };
+        msgText.SetTextColor(LauncherTheme.Foreground);
+        msgText.SetPadding(0, 0, 0, (int)(14 * density));
+        view.AddView(msgText);
+
+        var btnRow = new LinearLayout(this)
+        {
+            Orientation = Orientation.Horizontal
+        };
+        btnRow.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+
+        var issuesBtn = new Button(this)
+        {
+            Text = "GitHub Issues",
+            TextSize = 11
+        };
+        issuesBtn.Background = LauncherTheme.CreateBox(LauncherTheme.ControlMid, 3);
+        issuesBtn.SetTextColor(LauncherTheme.Foreground);
+        var issuesLp = new LinearLayout.LayoutParams(0, (int)(36 * density), 1f)
+        {
+            RightMargin = (int)(6 * density)
+        };
+        issuesBtn.LayoutParameters = issuesLp;
+        issuesBtn.Click += (_, _) => OpenUrl("https://github.com/SolomonNumb1/space-station-14-mobile/issues");
+        btnRow.AddView(issuesBtn);
+
+        AlertDialog? dialog = null;
+
+        var agreeBtn = new Button(this)
+        {
+            Text = "I Understand & Agree",
+            TextSize = 11,
+            Typeface = Typeface.DefaultBold
+        };
+        agreeBtn.Background = LauncherTheme.CreateBox(Color.ParseColor("#2e7d32"), 3);
+        agreeBtn.SetTextColor(LauncherTheme.Foreground);
+        var agreeLp = new LinearLayout.LayoutParams(0, (int)(36 * density), 1.2f);
+        agreeBtn.LayoutParameters = agreeLp;
+        agreeBtn.Click += (_, _) =>
+        {
+            _storage.Data.DisclaimerAccepted = true;
+            _storage.Save();
+            dialog?.Dismiss();
+            _ = CheckForUpdatesAsync();
+        };
+        btnRow.AddView(agreeBtn);
+
+        view.AddView(btnRow);
+        scroll.AddView(view);
+        builder.SetView(scroll);
+        builder.SetCancelable(false);
+
+        dialog = builder.Create();
+        dialog.Show();
+    }
+
+    private async Task CheckForUpdatesAsync(bool userInitiated = false)
+    {
+        try
+        {
+            using var http = new HttpClient();
+            http.Timeout = TimeSpan.FromSeconds(10);
+            http.DefaultRequestHeaders.UserAgent.ParseAdd("SS14-Android-Launcher");
+
+            var json = await http.GetStringAsync("https://api.github.com/repos/SolomonNumb1/space-station-14-mobile/releases/latest");
+            var release = JsonSerializer.Deserialize<GitHubReleaseInfo>(json);
+            if (release == null || string.IsNullOrWhiteSpace(release.TagName))
+            {
+                if (userInitiated)
+                {
+                    RunOnUiThread(() => Toast.MakeText(this, "Could not check for updates.", ToastLength.Short)?.Show());
+                }
+                return;
+            }
+
+            var currentVer = GetCurrentAppVersion();
+            if (IsNewerVersion(release.TagName, currentVer))
+            {
+                RunOnUiThread(() => ShowUpdateDialog(release, currentVer));
+            }
+            else if (userInitiated)
+            {
+                RunOnUiThread(() => Toast.MakeText(this, $"You are on the latest version ({currentVer})", ToastLength.Short)?.Show());
+            }
+        }
+        catch (Exception ex)
+        {
+            if (userInitiated)
+            {
+                RunOnUiThread(() => Toast.MakeText(this, $"Update check failed: {ex.Message}", ToastLength.Short)?.Show());
+            }
+        }
+    }
+
+    private static bool IsNewerVersion(string latestTag, string currentTag)
+    {
+        var lStr = latestTag.TrimStart('v', 'V').Trim();
+        var cStr = currentTag.TrimStart('v', 'V').Trim();
+
+        if (Version.TryParse(lStr, out var lVer) && Version.TryParse(cStr, out var cVer))
+        {
+            return lVer > cVer;
+        }
+
+        var lParts = lStr.Split('.');
+        var cParts = cStr.Split('.');
+        var len = Math.Max(lParts.Length, cParts.Length);
+        for (var i = 0; i < len; i++)
+        {
+            var lNum = i < lParts.Length && int.TryParse(lParts[i], out var p1) ? p1 : 0;
+            var cNum = i < cParts.Length && int.TryParse(cParts[i], out var p2) ? p2 : 0;
+            if (lNum > cNum) return true;
+            if (lNum < cNum) return false;
+        }
+
+        return string.Compare(latestTag, currentTag, StringComparison.OrdinalIgnoreCase) > 0;
+    }
+
+    private void ShowUpdateDialog(GitHubReleaseInfo release, string currentVer)
+    {
+        var builder = new AlertDialog.Builder(this);
+        var density = Resources?.DisplayMetrics?.Density ?? 1f;
+
+        var scroll = new ScrollView(this);
+        var view = new LinearLayout(this)
+        {
+            Orientation = Orientation.Vertical
+        };
+        view.SetBackgroundColor(LauncherTheme.PopupBackground);
+        view.SetPadding((int)(20 * density), (int)(16 * density), (int)(20 * density), (int)(16 * density));
+
+        var title = new TextView(this)
+        {
+            Text = $"New Update Available: {release.TagName}",
+            TextSize = 16,
+            Typeface = Typeface.DefaultBold
+        };
+        title.SetTextColor(LauncherTheme.NanoGold);
+        title.SetPadding(0, 0, 0, (int)(6 * density));
+        view.AddView(title);
+
+        var verText = new TextView(this)
+        {
+            Text = $"Current: {currentVer}  →  New: {release.TagName}",
+            TextSize = 12
+        };
+        verText.SetTextColor(LauncherTheme.SubText);
+        verText.SetPadding(0, 0, 0, (int)(10 * density));
+        view.AddView(verText);
+
+        if (!string.IsNullOrWhiteSpace(release.Body))
+        {
+            var notesTitle = new TextView(this)
+            {
+                Text = "Changelog:",
+                TextSize = 12,
+                Typeface = Typeface.DefaultBold
+            };
+            notesTitle.SetTextColor(LauncherTheme.Foreground);
+            notesTitle.SetPadding(0, 0, 0, (int)(4 * density));
+            view.AddView(notesTitle);
+
+            var notesText = new TextView(this)
+            {
+                Text = release.Body.Trim(),
+                TextSize = 11
+            };
+            notesText.SetTextColor(LauncherTheme.ForegroundMuted);
+            notesText.SetPadding(0, 0, 0, (int)(12 * density));
+            view.AddView(notesText);
+        }
+
+        var btnRow = new LinearLayout(this)
+        {
+            Orientation = Orientation.Horizontal
+        };
+        btnRow.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+
+        scroll.AddView(view);
+        builder.SetView(scroll);
+
+        AlertDialog? dialog = null;
+
+        var laterBtn = new Button(this)
+        {
+            Text = "Later",
+            TextSize = 11
+        };
+        laterBtn.Background = LauncherTheme.CreateBox(LauncherTheme.ControlMid, 3);
+        laterBtn.SetTextColor(LauncherTheme.Foreground);
+        var laterLp = new LinearLayout.LayoutParams(0, (int)(36 * density), 1f)
+        {
+            RightMargin = (int)(6 * density)
+        };
+        laterBtn.LayoutParameters = laterLp;
+        laterBtn.Click += (_, _) => dialog?.Dismiss();
+        btnRow.AddView(laterBtn);
+
+        var downloadBtn = new Button(this)
+        {
+            Text = "Download APK",
+            TextSize = 11,
+            Typeface = Typeface.DefaultBold
+        };
+        downloadBtn.Background = LauncherTheme.CreateBox(LauncherTheme.NanoGold, 3);
+        downloadBtn.SetTextColor(Color.ParseColor("#111827"));
+        var downloadLp = new LinearLayout.LayoutParams(0, (int)(36 * density), 1.2f);
+        downloadBtn.LayoutParameters = downloadLp;
+
+        var apkAsset = release.Assets?.FirstOrDefault(a => a.Name.EndsWith(".apk", StringComparison.OrdinalIgnoreCase));
+        var downloadUrl = apkAsset?.BrowserDownloadUrl ?? release.HtmlUrl ?? "https://github.com/SolomonNumb1/space-station-14-mobile/releases/latest";
+
+        downloadBtn.Click += (_, _) =>
+        {
+            dialog?.Dismiss();
+            OpenUrl(downloadUrl);
+        };
+        btnRow.AddView(downloadBtn);
+
+        view.AddView(btnRow);
+
+        dialog = builder.Create();
+        dialog.Show();
     }
 }

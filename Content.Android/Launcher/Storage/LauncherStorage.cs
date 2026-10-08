@@ -30,6 +30,9 @@ public sealed class LauncherData
     {
         "https://hub.spacestation14.com/"
     };
+
+    [JsonPropertyName("disclaimerAccepted")]
+    public bool DisclaimerAccepted { get; set; } = false;
 }
 
 public sealed class LauncherStorage
