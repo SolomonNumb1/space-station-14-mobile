@@ -31,6 +31,13 @@ public static class CrashReporter
         {
             try
             {
+                var dir = global::Android.App.Application.Context.GetExternalFilesDir(null)?.AbsolutePath;
+                if (!string.IsNullOrEmpty(dir))
+                    return dir!;
+            }
+            catch { }
+            try
+            {
                 var dir = global::Android.App.Application.Context.FilesDir?.AbsolutePath;
                 if (!string.IsNullOrEmpty(dir))
                     return dir!;

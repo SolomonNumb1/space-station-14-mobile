@@ -81,6 +81,7 @@ public sealed class LauncherActivity : Activity
     private string? _expandedServerAddress;
     private readonly Dictionary<string, ServerInfo> _serverInfoCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _loadingServerInfo = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, (LinearLayout Container, TextView Chevron, ServerListEntry Server)> _renderedServerRows = new(StringComparer.OrdinalIgnoreCase);
 
     private bool _filtersVisible;
     private string _filterLanguage = "all";
@@ -726,12 +727,38 @@ public sealed class LauncherActivity : Activity
             _filterBtn.Text = $"Filters ({sorted.Count} / {_servers.Count})";
         }
 
+        _renderedServerRows.Clear();
+
+        const int batchSize = 35;
+        var firstBatch = sorted.Take(batchSize).ToList();
         var idx = 0;
-        foreach (var server in sorted)
+        foreach (var server in firstBatch)
         {
             var row = CreateServerTableRow(server, idx % 2 == 1, density);
             _listLayout.AddView(row);
             idx++;
+        }
+
+        if (sorted.Count > batchSize)
+        {
+            void AppendBatch(int startIdx)
+            {
+                if (startIdx >= sorted.Count) return;
+                var currentBatch = sorted.Skip(startIdx).Take(batchSize).ToList();
+                foreach (var server in currentBatch)
+                {
+                    var row = CreateServerTableRow(server, startIdx % 2 == 1, density);
+                    _listLayout.AddView(row);
+                    startIdx++;
+                }
+
+                if (startIdx < sorted.Count)
+                {
+                    _listLayout.Post(() => AppendBatch(startIdx));
+                }
+            }
+
+            _listLayout.Post(() => AppendBatch(batchSize));
         }
     }
 
@@ -780,7 +807,14 @@ public sealed class LauncherActivity : Activity
         starBtn.Click += (_, _) =>
         {
             _storage.ToggleFavorite(server.Address);
-            RenderServerList();
+            var isFavNow = _storage.IsFavorite(server.Address);
+            starBtn.Text = isFavNow ? "★ " : "☆ ";
+            starBtn.SetTextColor(isFavNow ? LauncherTheme.NanoGold : LauncherTheme.ForegroundMuted);
+            if (_activeTab == Tab.Favorites)
+            {
+                _listLayout.RemoveView(container);
+                _renderedServerRows.Remove(server.Address);
+            }
         };
         nameCol.AddView(starBtn);
 
@@ -849,131 +883,183 @@ public sealed class LauncherActivity : Activity
 
         container.AddView(row);
 
+        _renderedServerRows[server.Address] = (container, chevron, server);
+
         if (isExpanded)
         {
-            var detailsBox = new LinearLayout(this)
-            {
-                Orientation = Orientation.Vertical
-            };
-            detailsBox.SetBackgroundColor(LauncherTheme.PopupBackground);
-            detailsBox.SetPadding((int)(26 * density), (int)(10 * density), (int)(16 * density), (int)(12 * density));
-            detailsBox.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
-
-            if (_serverInfoCache.TryGetValue(server.Address, out var info))
-            {
-                if (!string.IsNullOrWhiteSpace(info.Description))
-                {
-                    var descText = new TextView(this)
-                    {
-                        Text = info.Description.Trim(),
-                        TextSize = 11
-                    };
-                    descText.SetTextColor(LauncherTheme.Foreground);
-                    descText.SetTextIsSelectable(true);
-                    descText.SetPadding(0, 0, 0, (int)(8 * density));
-                    detailsBox.AddView(descText);
-                }
-
-                var metaSb = new System.Text.StringBuilder();
-                if (!string.IsNullOrEmpty(server.StatusData?.Map)) metaSb.Append($"Map: {server.StatusData.Map}   ");
-                if (!string.IsNullOrEmpty(server.StatusData?.Preset)) metaSb.Append($"Mode: {server.StatusData.Preset}   ");
-                if (metaSb.Length > 0)
-                {
-                    var metaText = new TextView(this)
-                    {
-                        Text = metaSb.ToString(),
-                        TextSize = 10
-                    };
-                    metaText.SetTextColor(LauncherTheme.NanoGold);
-                    metaText.SetPadding(0, 0, 0, (int)(8 * density));
-                    detailsBox.AddView(metaText);
-                }
-
-                if (info.Links != null && info.Links.Count > 0)
-                {
-                    var linksLayout = new LinearLayout(this)
-                    {
-                        Orientation = Orientation.Horizontal
-                    };
-                    linksLayout.SetPadding(0, 0, 0, (int)(8 * density));
-                    foreach (var link in info.Links)
-                    {
-                        if (string.IsNullOrEmpty(link.Url)) continue;
-                        var linkBtn = new Button(this)
-                        {
-                            Text = link.Name ?? link.Icon ?? "Link",
-                            TextSize = 10
-                        };
-                        linkBtn.Background = LauncherTheme.CreateBox(LauncherTheme.ControlMid, 3);
-                        linkBtn.SetTextColor(LauncherTheme.Foreground);
-                        var lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, (int)(28 * density))
-                        {
-                            RightMargin = (int)(8 * density)
-                        };
-                        linkBtn.LayoutParameters = lp;
-                        var url = link.Url;
-                        linkBtn.Click += (_, _) => OpenUrl(url);
-                        linksLayout.AddView(linkBtn);
-                    }
-                    detailsBox.AddView(linksLayout);
-                }
-            }
-            else
-            {
-                var loadingText = new TextView(this)
-                {
-                    Text = "Loading server details...",
-                    TextSize = 11
-                };
-                loadingText.SetTextColor(LauncherTheme.SubText);
-                loadingText.SetPadding(0, 0, 0, (int)(8 * density));
-                detailsBox.AddView(loadingText);
-            }
-
+            var detailsBox = BuildServerDetailsView(server, density);
             container.AddView(detailsBox);
         }
 
         return container;
     }
 
-    private void ToggleExpandServer(string address)
+    private View BuildServerDetailsView(ServerListEntry server, float density)
     {
-        if (string.Equals(_expandedServerAddress, address, StringComparison.OrdinalIgnoreCase))
+        var detailsBox = new LinearLayout(this)
         {
-            _expandedServerAddress = null;
+            Orientation = Orientation.Vertical
+        };
+        detailsBox.SetBackgroundColor(LauncherTheme.PopupBackground);
+        detailsBox.SetPadding((int)(26 * density), (int)(10 * density), (int)(16 * density), (int)(12 * density));
+        detailsBox.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+
+        if (_serverInfoCache.TryGetValue(server.Address, out var info))
+        {
+            if (!string.IsNullOrWhiteSpace(info.Description))
+            {
+                var descText = new TextView(this)
+                {
+                    Text = info.Description.Trim(),
+                    TextSize = 11
+                };
+                descText.SetTextColor(LauncherTheme.Foreground);
+                descText.SetTextIsSelectable(true);
+                descText.SetPadding(0, 0, 0, (int)(8 * density));
+                detailsBox.AddView(descText);
+            }
+
+            var metaSb = new System.Text.StringBuilder();
+            if (!string.IsNullOrEmpty(server.StatusData?.Map)) metaSb.Append($"Map: {server.StatusData.Map}   ");
+            if (!string.IsNullOrEmpty(server.StatusData?.Preset)) metaSb.Append($"Mode: {server.StatusData.Preset}   ");
+            if (metaSb.Length > 0)
+            {
+                var metaText = new TextView(this)
+                {
+                    Text = metaSb.ToString(),
+                    TextSize = 10
+                };
+                metaText.SetTextColor(LauncherTheme.NanoGold);
+                metaText.SetPadding(0, 0, 0, (int)(8 * density));
+                detailsBox.AddView(metaText);
+            }
+
+            if (info.Links != null && info.Links.Count > 0)
+            {
+                var linksLayout = new LinearLayout(this)
+                {
+                    Orientation = Orientation.Horizontal
+                };
+                linksLayout.SetPadding(0, 0, 0, (int)(8 * density));
+                foreach (var link in info.Links)
+                {
+                    if (string.IsNullOrEmpty(link.Url)) continue;
+                    var linkBtn = new Button(this)
+                    {
+                        Text = link.Name ?? link.Icon ?? "Link",
+                        TextSize = 10
+                    };
+                    linkBtn.Background = LauncherTheme.CreateBox(LauncherTheme.ControlMid, 3);
+                    linkBtn.SetTextColor(LauncherTheme.Foreground);
+                    var lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, (int)(28 * density))
+                    {
+                        RightMargin = (int)(8 * density)
+                    };
+                    linkBtn.LayoutParameters = lp;
+                    var url = link.Url;
+                    linkBtn.Click += (_, _) => OpenUrl(url);
+                    linksLayout.AddView(linkBtn);
+                }
+                detailsBox.AddView(linksLayout);
+            }
         }
         else
         {
-            _expandedServerAddress = address;
-            if (!_serverInfoCache.ContainsKey(address) && !_loadingServerInfo.Contains(address))
+            var loadingText = new TextView(this)
             {
-                _loadingServerInfo.Add(address);
-                Task.Run(async () =>
+                Text = "Loading server details...",
+                TextSize = 11
+            };
+            loadingText.SetTextColor(LauncherTheme.SubText);
+            loadingText.SetPadding(0, 0, 0, (int)(8 * density));
+            detailsBox.AddView(loadingText);
+        }
+
+        return detailsBox;
+    }
+
+    private void ToggleExpandServer(string address)
+    {
+        var density = Resources?.DisplayMetrics?.Density ?? 1f;
+
+        // If another server was previously expanded, collapse it in-place
+        if (!string.IsNullOrEmpty(_expandedServerAddress) && 
+            !string.Equals(_expandedServerAddress, address, StringComparison.OrdinalIgnoreCase))
+        {
+            if (_renderedServerRows.TryGetValue(_expandedServerAddress, out var prev))
+            {
+                prev.Chevron.Text = "▶ ";
+                prev.Chevron.SetTextColor(LauncherTheme.ForegroundMuted);
+                if (prev.Container.ChildCount > 1)
                 {
-                    try
-                    {
-                        var info = await _hubClient.FetchServerInfoAsync(address);
-                        if (info != null)
-                        {
-                            _serverInfoCache[address] = info;
-                        }
-                    }
-                    catch { }
-                    finally
-                    {
-                        _loadingServerInfo.Remove(address);
-                        RunOnUiThread(() =>
-                        {
-                            if (string.Equals(_expandedServerAddress, address, StringComparison.OrdinalIgnoreCase))
-                            {
-                                RenderServerList();
-                            }
-                        });
-                    }
-                });
+                    prev.Container.RemoveViewAt(1);
+                }
             }
         }
-        RenderServerList();
+
+        if (string.Equals(_expandedServerAddress, address, StringComparison.OrdinalIgnoreCase))
+        {
+            _expandedServerAddress = null;
+            if (_renderedServerRows.TryGetValue(address, out var cur))
+            {
+                cur.Chevron.Text = "▶ ";
+                cur.Chevron.SetTextColor(LauncherTheme.ForegroundMuted);
+                if (cur.Container.ChildCount > 1)
+                {
+                    cur.Container.RemoveViewAt(1);
+                }
+            }
+            return;
+        }
+
+        _expandedServerAddress = address;
+        if (_renderedServerRows.TryGetValue(address, out var entry))
+        {
+            entry.Chevron.Text = "▼ ";
+            entry.Chevron.SetTextColor(LauncherTheme.NanoGold);
+            if (entry.Container.ChildCount > 1)
+            {
+                entry.Container.RemoveViewAt(1);
+            }
+            var detailsBox = BuildServerDetailsView(entry.Server, density);
+            entry.Container.AddView(detailsBox);
+        }
+
+        if (!_serverInfoCache.ContainsKey(address) && !_loadingServerInfo.Contains(address))
+        {
+            _loadingServerInfo.Add(address);
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var info = await _hubClient.FetchServerInfoAsync(address);
+                    if (info != null)
+                    {
+                        _serverInfoCache[address] = info;
+                    }
+                }
+                catch { }
+                finally
+                {
+                    _loadingServerInfo.Remove(address);
+                    RunOnUiThread(() =>
+                    {
+                        if (string.Equals(_expandedServerAddress, address, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (_renderedServerRows.TryGetValue(address, out var e))
+                            {
+                                if (e.Container.ChildCount > 1)
+                                {
+                                    e.Container.RemoveViewAt(1);
+                                }
+                                var updatedBox = BuildServerDetailsView(e.Server, density);
+                                e.Container.AddView(updatedBox);
+                            }
+                        }
+                    });
+                }
+            });
+        }
     }
 
     private string FormatRoundTime(ServerStatus? status)
