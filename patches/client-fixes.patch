@@ -1,5 +1,5 @@
 diff --git a/Content.Client/Audio/AudioUIController.cs b/Content.Client/Audio/AudioUIController.cs
-index 779f56d619..550acb510f 100644
+index 779f56d6..550acb51 100644
 --- a/Content.Client/Audio/AudioUIController.cs
 +++ b/Content.Client/Audio/AudioUIController.cs
 @@ -55,6 +55,12 @@ private void SetClickSound(string value)
@@ -50,7 +50,7 @@ index 779f56d619..550acb510f 100644
      }
  }
 diff --git a/Content.Client/Changelog/ChangelogManager.cs b/Content.Client/Changelog/ChangelogManager.cs
-index c233873ee3..88c663dc35 100644
+index c233873e..88c663dc 100644
 --- a/Content.Client/Changelog/ChangelogManager.cs
 +++ b/Content.Client/Changelog/ChangelogManager.cs
 @@ -49,10 +49,17 @@ public void SaveNewReadId()
@@ -262,7 +262,7 @@ index c233873ee3..88c663dc35 100644
  
          public enum ChangelogLineType
 diff --git a/Content.Client/Content.Client.csproj b/Content.Client/Content.Client.csproj
-index 1bb9d6f2e8..861bf97261 100644
+index 1bb9d6f2..861bf972 100644
 --- a/Content.Client/Content.Client.csproj
 +++ b/Content.Client/Content.Client.csproj
 @@ -2,8 +2,8 @@
@@ -277,7 +277,7 @@ index 1bb9d6f2e8..861bf97261 100644
    <Import Project="../MSBuild/Content.props" />
    <ItemGroup>
 diff --git a/Content.Client/Gameplay/GameplayState.cs b/Content.Client/Gameplay/GameplayState.cs
-index c782190709..33ee0cf08b 100644
+index c7821907..33ee0cf0 100644
 --- a/Content.Client/Gameplay/GameplayState.cs
 +++ b/Content.Client/Gameplay/GameplayState.cs
 @@ -54,7 +54,7 @@ protected override void Startup()
@@ -290,7 +290,7 @@ index c782190709..33ee0cf08b 100644
  
              // Version number watermark.
 diff --git a/Content.Client/Info/RulesPopup.xaml.cs b/Content.Client/Info/RulesPopup.xaml.cs
-index 745c3a8f1f..3dfb54db4c 100644
+index 745c3a8f..3dfb54db 100644
 --- a/Content.Client/Info/RulesPopup.xaml.cs
 +++ b/Content.Client/Info/RulesPopup.xaml.cs
 @@ -16,7 +16,12 @@ public float Timer
@@ -309,7 +309,7 @@ index 745c3a8f1f..3dfb54db4c 100644
      }
 diff --git a/Content.Client/Launcher/ConnectServerCommand.cs b/Content.Client/Launcher/ConnectServerCommand.cs
 new file mode 100644
-index 0000000000..931ddc7247
+index 00000000..931ddc72
 --- /dev/null
 +++ b/Content.Client/Launcher/ConnectServerCommand.cs
 @@ -0,0 +1,42 @@
@@ -357,7 +357,7 @@ index 0000000000..931ddc7247
 +}
 diff --git a/Content.Client/Launcher/ConnectingOverlay.cs b/Content.Client/Launcher/ConnectingOverlay.cs
 new file mode 100644
-index 0000000000..3f5f843dee
+index 00000000..3f5f843d
 --- /dev/null
 +++ b/Content.Client/Launcher/ConnectingOverlay.cs
 @@ -0,0 +1,84 @@
@@ -447,7 +447,7 @@ index 0000000000..3f5f843dee
 +}
 diff --git a/Content.Client/Launcher/LauncherAccountWindow.cs b/Content.Client/Launcher/LauncherAccountWindow.cs
 new file mode 100644
-index 0000000000..aff66b2915
+index 00000000..aff66b29
 --- /dev/null
 +++ b/Content.Client/Launcher/LauncherAccountWindow.cs
 @@ -0,0 +1,182 @@
@@ -635,7 +635,7 @@ index 0000000000..aff66b2915
 +}
 diff --git a/Content.Client/Launcher/LauncherAuthManager.cs b/Content.Client/Launcher/LauncherAuthManager.cs
 new file mode 100644
-index 0000000000..7f673fab60
+index 00000000..7f673fab
 --- /dev/null
 +++ b/Content.Client/Launcher/LauncherAuthManager.cs
 @@ -0,0 +1,177 @@
@@ -818,7 +818,7 @@ index 0000000000..7f673fab60
 +}
 diff --git a/Content.Client/Launcher/SS14LauncherWindow.cs b/Content.Client/Launcher/SS14LauncherWindow.cs
 new file mode 100644
-index 0000000000..f391ae62d5
+index 00000000..f391ae62
 --- /dev/null
 +++ b/Content.Client/Launcher/SS14LauncherWindow.cs
 @@ -0,0 +1,860 @@
@@ -1684,7 +1684,7 @@ index 0000000000..f391ae62d5
 +}
 diff --git a/Content.Client/Launcher/ServerContentDownloader.cs b/Content.Client/Launcher/ServerContentDownloader.cs
 new file mode 100644
-index 0000000000..c09418afaa
+index 00000000..c09418af
 --- /dev/null
 +++ b/Content.Client/Launcher/ServerContentDownloader.cs
 @@ -0,0 +1,218 @@
@@ -1907,7 +1907,7 @@ index 0000000000..c09418afaa
 +    }
 +}
 diff --git a/Content.Client/Lobby/LobbyState.cs b/Content.Client/Lobby/LobbyState.cs
-index b5373e0622..7c8f1790c5 100644
+index b5373e06..7c8f1790 100644
 --- a/Content.Client/Lobby/LobbyState.cs
 +++ b/Content.Client/Lobby/LobbyState.cs
 @@ -7,6 +7,7 @@
@@ -1919,7 +1919,7 @@ index b5373e0622..7c8f1790c5 100644
  using Robust.Client.Console;
  using Robust.Client.ResourceManagement;
 diff --git a/Content.Client/MainMenu/MainMenu.cs b/Content.Client/MainMenu/MainMenu.cs
-index 78a2876632..2dbfd9fde1 100644
+index 78a28766..2dbfd9fd 100644
 --- a/Content.Client/MainMenu/MainMenu.cs
 +++ b/Content.Client/MainMenu/MainMenu.cs
 @@ -1,4 +1,10 @@
@@ -2271,7 +2271,7 @@ index 78a2876632..2dbfd9fde1 100644
      }
  }
 diff --git a/Content.Client/MainMenu/UI/MainMenuControl.xaml b/Content.Client/MainMenu/UI/MainMenuControl.xaml
-index 17a3e95449..2de07c7601 100644
+index 17a3e954..2de07c76 100644
 --- a/Content.Client/MainMenu/UI/MainMenuControl.xaml
 +++ b/Content.Client/MainMenu/UI/MainMenuControl.xaml
 @@ -1,4 +1,4 @@
@@ -2294,7 +2294,7 @@ index 17a3e95449..2de07c7601 100644
                      Name="ChangelogButton"
                      StyleIdentifier="mainMenu"
 diff --git a/Content.Client/MainMenu/UI/MainMenuControl.xaml.cs b/Content.Client/MainMenu/UI/MainMenuControl.xaml.cs
-index 2de90acde4..3ebb1b915e 100644
+index 2de90acd..3ebb1b91 100644
 --- a/Content.Client/MainMenu/UI/MainMenuControl.xaml.cs
 +++ b/Content.Client/MainMenu/UI/MainMenuControl.xaml.cs
 @@ -55,7 +55,15 @@ public MainMenuControl(IResourceCache resCache, IConfigurationManager configMan)
@@ -2317,7 +2317,7 @@ index 2de90acde4..3ebb1b915e 100644
  }
 diff --git a/Content.Client/MainMenu/UI/ServerBrowserWindow.cs b/Content.Client/MainMenu/UI/ServerBrowserWindow.cs
 new file mode 100644
-index 0000000000..152a014586
+index 00000000..152a0145
 --- /dev/null
 +++ b/Content.Client/MainMenu/UI/ServerBrowserWindow.cs
 @@ -0,0 +1,232 @@
@@ -2554,7 +2554,7 @@ index 0000000000..152a014586
 +    }
 +}
 diff --git a/Content.Client/Program.cs b/Content.Client/Program.cs
-index 0404e825cf..74b4e6ed56 100644
+index 0404e825..74b4e6ed 100644
 --- a/Content.Client/Program.cs
 +++ b/Content.Client/Program.cs
 @@ -7,7 +7,7 @@ internal static class Program
@@ -2566,11 +2566,59 @@ index 0404e825cf..74b4e6ed56 100644
          }
      }
  }
+diff --git a/Content.Client/RoundEnd/RoundEndSummaryUIController.cs b/Content.Client/RoundEnd/RoundEndSummaryUIController.cs
+index 3ef81afa..2a04457d 100644
+--- a/Content.Client/RoundEnd/RoundEndSummaryUIController.cs
++++ b/Content.Client/RoundEnd/RoundEndSummaryUIController.cs
+@@ -35,12 +35,19 @@ private void ToggleScoreboardWindow(ICommonSession? session = null)
+ 
+     public void OpenRoundEndSummaryWindow(RoundEndMessageEvent message)
+     {
+-        // Don't open duplicate windows (mainly for replays).
+-        if (_window?.RoundId == message.RoundId)
+-            return;
++        try
++        {
++            // Don't open duplicate windows (mainly for replays).
++            if (_window?.RoundId == message.RoundId)
++                return;
+ 
+-        _window = new RoundEndSummaryWindow(message.GamemodeTitle, message.RoundEndText,
+-            message.RoundDuration, message.RoundId, message.AllPlayersEndInfo);
++            _window = new RoundEndSummaryWindow(message.GamemodeTitle, message.RoundEndText,
++                message.RoundDuration, message.RoundId, message.AllPlayersEndInfo);
++        }
++        catch (System.Exception ex)
++        {
++            Robust.Shared.Log.Logger.ErrorS("roundend", $"Failed to open round end summary window: {ex}");
++        }
+     }
+ 
+     public void OnSystemLoaded(ClientGameTicker system)
 diff --git a/Content.Client/UserInterface/Controls/MainViewport.cs b/Content.Client/UserInterface/Controls/MainViewport.cs
-index 2f138bb0bb..d67256ba1f 100644
+index 2f138bb0..931e872f 100644
 --- a/Content.Client/UserInterface/Controls/MainViewport.cs
 +++ b/Content.Client/UserInterface/Controls/MainViewport.cs
-@@ -59,9 +59,9 @@ public void UpdateCfg()
+@@ -34,6 +34,18 @@ public MainViewport()
+             _cfg.OnValueChanged(CCVars.ViewportScalingFilterMode, _ => UpdateCfg(), true);
+         }
+ 
++        protected override void MouseWheel(GUIMouseWheelEventArgs args)
++        {
++            base.MouseWheel(args);
++            if (!args.Handled)
++            {
++                Viewport.ForwardMouseWheel(args);
++            }
++        }
++
++
++
++
+         protected override void EnteredTree()
+         {
+             base.EnteredTree();
+@@ -59,9 +71,9 @@ public void UpdateCfg()
              if (stretch)
              {
                  var snapFactor = CalcSnappingFactor();
@@ -2583,7 +2631,7 @@ index 2f138bb0bb..d67256ba1f 100644
                      Viewport.StretchMode = filterMode switch
                      {
 diff --git a/Content.Client/UserInterface/Controls/SlotControl.cs b/Content.Client/UserInterface/Controls/SlotControl.cs
-index ea95f5d9da..117b7f77f0 100644
+index ea95f5d9..117b7f77 100644
 --- a/Content.Client/UserInterface/Controls/SlotControl.cs
 +++ b/Content.Client/UserInterface/Controls/SlotControl.cs
 @@ -160,9 +160,10 @@ public SlotControl()
@@ -2599,7 +2647,7 @@ index ea95f5d9da..117b7f77f0 100644
                  VerticalAlignment = VAlignment.Bottom,
                  Visible = false,
 diff --git a/Content.Client/UserInterface/Systems/Chat/ChatUIController.cs b/Content.Client/UserInterface/Systems/Chat/ChatUIController.cs
-index 8e99a97180..f06b007abf 100644
+index 8e99a971..f06b007a 100644
 --- a/Content.Client/UserInterface/Systems/Chat/ChatUIController.cs
 +++ b/Content.Client/UserInterface/Systems/Chat/ChatUIController.cs
 @@ -235,11 +235,19 @@ public override void Initialize()
@@ -2627,7 +2675,7 @@ index 8e99a97180..f06b007abf 100644
  
          _config.OnValueChanged(CCVars.ChatWindowOpacity, OnChatWindowOpacityChanged);
 diff --git a/Content.Client/UserInterface/Systems/Info/InfoUIController.cs b/Content.Client/UserInterface/Systems/Info/InfoUIController.cs
-index 5a8a804cb9..946c786205 100644
+index 5a8a804c..946c7862 100644
 --- a/Content.Client/UserInterface/Systems/Info/InfoUIController.cs
 +++ b/Content.Client/UserInterface/Systems/Info/InfoUIController.cs
 @@ -92,8 +92,14 @@ public GuideEntryPrototype GetCoreRuleEntry()
@@ -2648,7 +2696,7 @@ index 5a8a804cb9..946c786205 100644
          }
  
 diff --git a/Content.Client/UserInterface/Systems/Storage/Controls/StorageWindow.cs b/Content.Client/UserInterface/Systems/Storage/Controls/StorageWindow.cs
-index 3651b0d893..f08f0d695e 100644
+index 3651b0d8..f08f0d69 100644
 --- a/Content.Client/UserInterface/Systems/Storage/Controls/StorageWindow.cs
 +++ b/Content.Client/UserInterface/Systems/Storage/Controls/StorageWindow.cs
 @@ -653,6 +653,11 @@ protected override DragMode GetDragModeFor(Vector2 relativeMousePos)
@@ -2664,7 +2712,7 @@ index 3651b0d893..f08f0d695e 100644
      }
  
 diff --git a/Content.Client/Viewport/ScalingViewport.cs b/Content.Client/Viewport/ScalingViewport.cs
-index 23498ead99..13f56856bb 100644
+index 23498ead..a2dbae57 100644
 --- a/Content.Client/Viewport/ScalingViewport.cs
 +++ b/Content.Client/Viewport/ScalingViewport.cs
 @@ -1,9 +1,13 @@
@@ -2681,7 +2729,7 @@ index 23498ead99..13f56856bb 100644
  using Robust.Client.UserInterface;
  using Robust.Client.UserInterface.CustomControls;
  using Robust.Shared.Configuration;
-@@ -27,6 +31,7 @@ public sealed partial class ScalingViewport : Control, IViewportControl
+@@ -27,12 +31,15 @@ public sealed partial class ScalingViewport : Control, IViewportControl
          [Dependency] private IClyde _clyde = default!;
          [Dependency] private IEntityManager _entityManager = default!;
          [Dependency] private IInputManager _inputManager = default!;
@@ -2689,7 +2737,43 @@ index 23498ead99..13f56856bb 100644
          [Dependency] private IPrototypeManager _prototypeManager = default!;
          [Dependency] private IConfigurationManager _cfg = default!;
  
-@@ -160,13 +165,40 @@ protected override void KeyBindUp(GUIBoundKeyEventArgs args)
+         // Internal viewport creation is deferred.
+         private IClydeViewport? _viewport;
+         private IEye? _eye;
++        private MobileEyeProxy? _eyeProxy;
++        private float _mobileZoomFactor = 1.0f;
+         private Vector2i _viewportSize;
+         private int _curRenderScale;
+         private ScalingViewportStretchMode _stretchMode = ScalingViewportStretchMode.Bilinear;
+@@ -48,6 +55,15 @@ public sealed partial class ScalingViewport : Control, IViewportControl
+ 
+         public int CurrentRenderScale => _curRenderScale;
+ 
++        public float MobileZoomFactor
++        {
++            get => _mobileZoomFactor;
++            set
++            {
++                _mobileZoomFactor = Math.Clamp(value, 0.4f, 2.5f);
++            }
++        }
++
+         /// <summary>
+         ///     The eye to render.
+         /// </summary>
+@@ -57,9 +73,10 @@ public IEye? Eye
+             set
+             {
+                 _eye = value;
++                _eyeProxy = value != null ? new MobileEyeProxy(value, this) : null;
+ 
+                 if (_viewport != null)
+-                    _viewport.Eye = value;
++                    _viewport.Eye = _eyeProxy;
+             }
+         }
+ 
+@@ -160,13 +177,52 @@ protected override void KeyBindUp(GUIBoundKeyEventArgs args)
              _inputManager.ViewportKeyEvent(this, args);
          }
  
@@ -2700,6 +2784,13 @@ index 23498ead99..13f56856bb 100644
 +            if (args.Handled)
 +                return;
 +
++            if (args.Delta.Y != 0)
++            {
++                var factor = args.Delta.Y > 0 ? 0.85f : 1.18f;
++                MobileZoomFactor *= factor;
++                args.Handle();
++            }
++
 +            if (_entityManager.TrySystem<ContentEyeSystem>(out var eyeSystem) &&
 +                _playerManager.LocalEntity is { } player &&
 +                _entityManager.TryGetComponent<ContentEyeComponent>(player, out var eyeComp))
@@ -2709,9 +2800,14 @@ index 23498ead99..13f56856bb 100644
 +                    ? eyeComp.TargetZoom / zoomMod
 +                    : eyeComp.TargetZoom * zoomMod;
 +                eyeSystem.RequestZoom(player, newZoom, false, false, eyeComp);
-+                args.Handle();
 +            }
 +        }
++
++        internal void ForwardMouseWheel(GUIMouseWheelEventArgs args)
++        {
++            MouseWheel(args);
++        }
++
 +
          protected override void Draw(IRenderHandle handle)
          {
@@ -2731,8 +2827,69 @@ index 23498ead99..13f56856bb 100644
  
              if (_queuedScreenshots.Count != 0)
              {
+@@ -292,7 +348,7 @@ private void RegenerateViewport()
+ 
+             _viewport.RenderScale = new Vector2(renderScale, renderScale);
+ 
+-            _viewport.Eye = _eye;
++            _viewport.Eye = _eyeProxy ?? _eye;
+         }
+ 
+         protected override void Resized()
+@@ -381,6 +437,51 @@ private void EnsureViewportCreated()
+ 
+             DebugTools.AssertNotNull(_viewport);
+         }
++
++        private sealed class MobileEyeProxy : IEye
++        {
++            private readonly IEye _baseEye;
++            private readonly ScalingViewport _owner;
++
++            public MobileEyeProxy(IEye baseEye, ScalingViewport owner)
++            {
++                _baseEye = baseEye;
++                _owner = owner;
++            }
++
++            public bool DrawFov { get => _baseEye.DrawFov; set => _baseEye.DrawFov = value; }
++            public bool DrawLight { get => _baseEye.DrawLight; set => _baseEye.DrawLight = value; }
++            public MapCoordinates Position => _baseEye.Position;
++            public Vector2 Offset { get => _baseEye.Offset; set => _baseEye.Offset = value; }
++            public Angle Rotation { get => _baseEye.Rotation; set => _baseEye.Rotation = value; }
++
++            public Vector2 Zoom
++            {
++                get => _baseEye.Zoom * _owner.MobileZoomFactor;
++                set => _baseEye.Zoom = value;
++            }
++
++            public Vector2 Scale
++            {
++                get => new(1f / Zoom.X, 1f / Zoom.Y);
++                set => Zoom = new(1f / value.X, 1f / value.Y);
++            }
++
++            public void GetViewMatrix(out Matrix3x2 viewMatrix, Vector2 renderScale)
++            {
++                _baseEye.GetViewMatrix(out viewMatrix, renderScale / _owner.MobileZoomFactor);
++            }
++
++            public void GetViewMatrixNoOffset(out Matrix3x2 viewMatrix, Vector2 renderScale)
++            {
++                _baseEye.GetViewMatrixNoOffset(out viewMatrix, renderScale / _owner.MobileZoomFactor);
++            }
++
++            public void GetViewMatrixInv(out Matrix3x2 viewMatrixInv, Vector2 renderScale)
++            {
++                _baseEye.GetViewMatrixInv(out viewMatrixInv, renderScale / _owner.MobileZoomFactor);
++            }
++        }
+     }
+ 
+     /// <summary>
 diff --git a/Content.Shared/Maps/TurfSystem.cs b/Content.Shared/Maps/TurfSystem.cs
-index 620187a74d..d218fe8104 100644
+index 620187a7..d218fe81 100644
 --- a/Content.Shared/Maps/TurfSystem.cs
 +++ b/Content.Shared/Maps/TurfSystem.cs
 @@ -187,8 +187,6 @@ public bool IsSpace(Tile tile)

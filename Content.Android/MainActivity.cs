@@ -477,6 +477,13 @@ namespace Content.Android
                     }
                     return null;
                 };
+
+                try
+                {
+                    System.Environment.SetEnvironmentVariable("MONO_GC_PARAMS", "major=marksweep-conc,nursery-size=32m,soft-heap-limit=512m");
+                }
+                catch { }
+
             }
             catch (Exception ex)
             {
@@ -493,18 +500,67 @@ namespace Content.Android
         public static string? LaunchPubKey;
         public static readonly System.Collections.Generic.Dictionary<string, string> LaunchBuildCVars = new();
 
+        private static void EnsureResourcesExtracted(string? filesDir)
+        {
+            if (string.IsNullOrEmpty(filesDir))
+                filesDir = "/data/data/io.spacestation14.android/files";
+            var zipFile = Path.Combine(filesDir, "resources.zip");
+            var verFile = Path.Combine(filesDir, "resources.version");
+            var currentVer = typeof(MainActivity).Assembly.GetName().Version?.ToString() ?? "1.3.0";
+            try
+            {
+                if (!File.Exists(zipFile) || new FileInfo(zipFile).Length == 0 || !File.Exists(verFile) || File.ReadAllText(verFile).Trim() != currentVer)
+                {
+                    var assembly = typeof(MainActivity).Assembly;
+                    var resourceName = "Content.Android.resources.zip";
+                    var names = assembly.GetManifestResourceNames();
+                    foreach (var name in names)
+                    {
+                        if (name.EndsWith("resources.zip"))
+                        {
+                            resourceName = name;
+                            break;
+                        }
+                    }
+                    using var inStream = assembly.GetManifestResourceStream(resourceName);
+                    if (inStream != null)
+                    {
+                        Directory.CreateDirectory(filesDir);
+                        var tempFile = zipFile + ".tmp";
+                        using (var outStream = File.Create(tempFile))
+                        {
+                            inStream.CopyTo(outStream);
+                        }
+                        File.Move(tempFile, zipFile, true);
+                        File.WriteAllText(verFile, currentVer);
+                        global::Android.Util.Log.Info("SS14_LOG", $"Extracted fresh resources.zip ({new FileInfo(zipFile).Length} bytes) for version {currentVer}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                global::Android.Util.Log.Error("SS14_LOG", $"Failed to ensure resources extracted: {ex}");
+            }
+        }
+
         protected override void OnCreate(Bundle? savedInstanceState)
         {
+            try
+            {
+                System.Environment.SetEnvironmentVariable("MONO_GC_PARAMS", "major=marksweep-conc,nursery-size=32m,soft-heap-limit=512m");
+            }
+            catch { }
+
             InstallJavaCrashHandler();
             // The SDL runtime can reset orientation at startup; enforce
             // landscape in code (manifest attribute alone doesn't stick).
             try
             {
                 RequestedOrientation = global::Android.Content.PM.ScreenOrientation.SensorLandscape;
-                // [SolomonNumb1] routes hardware volume keys directly to media stream for in game sound control
                 VolumeControlStream = global::Android.Media.Stream.Music;
             }
             catch { }
+
             try
             {
                 LaunchMountZip = Intent?.GetStringExtra("mount_zip") ?? LaunchMountZip;
@@ -545,29 +601,7 @@ namespace Content.Android
 
             try
             {
-                var filesDir = "/data/data/io.spacestation14.android/files";
-                var zipFile = Path.Combine(filesDir, "resources.zip");
-
-                if (!File.Exists(zipFile) || new FileInfo(zipFile).Length == 0)
-                {
-                    var assembly = typeof(MainActivity).Assembly;
-                    var resourceName = "Content.Android.resources.zip";
-                    var names = assembly.GetManifestResourceNames();
-                    foreach (var name in names)
-                    {
-                        if (name.EndsWith("resources.zip"))
-                        {
-                            resourceName = name;
-                            break;
-                        }
-                    }
-                    using var inStream = assembly.GetManifestResourceStream(resourceName);
-                    if (inStream != null)
-                    {
-                        using var outStream = File.Create(zipFile);
-                        inStream.CopyTo(outStream);
-                    }
-                }
+                EnsureResourcesExtracted(FilesDir?.AbsolutePath);
             }
             catch (Exception ex)
             {
@@ -604,7 +638,14 @@ namespace Content.Android
             if (Instance == this)
                 Instance = null;
             base.OnDestroy();
+
+            try
+            {
+                global::Android.OS.Process.KillProcess(global::Android.OS.Process.MyPid());
+            }
+            catch {}
         }
+
 
         private void ApplyImmersiveMode()
         {
@@ -783,19 +824,69 @@ namespace Content.Android
         {
             private readonly System.Text.StringBuilder _sb = new();
             private readonly string _tag;
-            private readonly StreamWriter? _fileWriter;
+            private readonly string? _filePath;
+            private readonly System.Collections.Concurrent.ConcurrentQueue<string> _queue = new();
+            private readonly System.Threading.CancellationTokenSource _cts = new();
+            private long _fileLength;
 
             public AndroidLogcatWriter(string tag, string? filePath = null)
             {
                 _tag = tag;
-                if (filePath != null)
+                _filePath = filePath;
+                if (!string.IsNullOrEmpty(_filePath))
                 {
                     try
                     {
-                        _fileWriter = new StreamWriter(File.Open(filePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite)) { AutoFlush = true };
+                        var fi = new FileInfo(_filePath);
+                        if (fi.Exists)
+                        {
+                            if (fi.Length > 2 * 1024 * 1024)
+                                fi.Delete();
+                            else
+                                _fileLength = fi.Length;
+                        }
                     }
                     catch {}
+
+                    var thread = new System.Threading.Thread(WorkerLoop)
+                    {
+                        IsBackground = true,
+                        Priority = System.Threading.ThreadPriority.BelowNormal,
+                        Name = "SS14-LogWriter"
+                    };
+                    thread.Start();
                 }
+            }
+
+            private void WorkerLoop()
+            {
+                try
+                {
+                    using var file = File.Open(_filePath!, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+                    using var writer = new StreamWriter(file, System.Text.Encoding.UTF8, 8192);
+                    while (!_cts.Token.IsCancellationRequested)
+                    {
+                        bool wrote = false;
+                        while (_queue.TryDequeue(out var line))
+                        {
+                            writer.WriteLine(line);
+                            _fileLength += line.Length + 1;
+                            wrote = true;
+                            if (_fileLength > 2 * 1024 * 1024)
+                            {
+                                writer.Flush();
+                                file.SetLength(0);
+                                _fileLength = 0;
+                            }
+                        }
+                        if (wrote)
+                        {
+                            writer.Flush();
+                        }
+                        System.Threading.Thread.Sleep(250);
+                    }
+                }
+                catch {}
             }
 
             public override System.Text.Encoding Encoding => System.Text.Encoding.UTF8;
@@ -807,7 +898,10 @@ namespace Content.Android
                     var line = _sb.ToString();
                     _sb.Clear();
                     global::Android.Util.Log.Info(_tag, line);
-                    try { _fileWriter?.WriteLine(line); } catch {}
+                    if (!string.IsNullOrEmpty(_filePath))
+                    {
+                        _queue.Enqueue(line);
+                    }
                 }
                 else if (value != '\r')
                 {
@@ -822,6 +916,7 @@ namespace Content.Android
                     Write(c);
             }
         }
+
 
         protected override void Main()
         {
@@ -974,7 +1069,13 @@ namespace Content.Android
                 global::Android.Util.Log.Info("SS14Launch", $"[Main] Starting GameController: contentStart={contentStart}, hasZip={hasZip}, mountZip={mountZip}, connectAddr={connectAddr}, user={username}");
 
                 startMethod.Invoke(null, new object?[] { args.ToArray(), options, contentStart, null });
+                global::Android.Util.Log.Info("SS14Launch", "[Main] GameController finished, finishing activity.");
+                Instance?.RunOnUiThread(() =>
+                {
+                    try { Instance?.Finish(); } catch {}
+                });
             }
+
             catch (Exception ex)
             {
                 LogCrash("Main", ex);

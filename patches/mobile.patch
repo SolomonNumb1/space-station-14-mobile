@@ -1,5 +1,11 @@
+diff --git a/Lidgren.Network/Lidgren.Network b/Lidgren.Network/Lidgren.Network
+--- a/Lidgren.Network/Lidgren.Network
++++ b/Lidgren.Network/Lidgren.Network
+@@ -1 +1 @@
+-Subproject commit f7ecb5aa384013d920f7925340cc4608ed156e83
++Subproject commit f7ecb5aa384013d920f7925340cc4608ed156e83-dirty
 diff --git a/MSBuild/Robust.DefineConstants.targets b/MSBuild/Robust.DefineConstants.targets
-index f67e982e56..46cb749415 100644
+index f67e982..46cb749 100644
 --- a/MSBuild/Robust.DefineConstants.targets
 +++ b/MSBuild/Robust.DefineConstants.targets
 @@ -11,6 +11,11 @@
@@ -15,7 +21,7 @@ index f67e982e56..46cb749415 100644
        <PropertyGroup>
          <DefineConstants>$(DefineConstants);LINUX;UNIX;FREEDESKTOP</DefineConstants>
 diff --git a/Resources/Shaders/Internal/fov-lighting.swsl b/Resources/Shaders/Internal/fov-lighting.swsl
-index 91bd98079a..f42e010ddd 100644
+index 91bd980..f42e010 100644
 --- a/Resources/Shaders/Internal/fov-lighting.swsl
 +++ b/Resources/Shaders/Internal/fov-lighting.swsl
 @@ -4,21 +4,24 @@ preset raw;
@@ -48,7 +54,7 @@ index 91bd98079a..f42e010ddd 100644
 +    COLOR = vec4(occludeColor.rgb, clamp(1.0 - occlusion, 0.0, 1.0));
  }
 diff --git a/Resources/Shaders/Internal/fov.swsl b/Resources/Shaders/Internal/fov.swsl
-index 2790536ff6..de469d4324 100644
+index 2790536..de469d4 100644
 --- a/Resources/Shaders/Internal/fov.swsl
 +++ b/Resources/Shaders/Internal/fov.swsl
 @@ -4,12 +4,15 @@ preset raw;
@@ -69,7 +75,7 @@ index 2790536ff6..de469d4324 100644
      highp float occlDist = occludeDepth(worldSpaceDiff, TEXTURE, 0.75).r;
  
 diff --git a/Resources/Shaders/Internal/light-hard.swsl b/Resources/Shaders/Internal/light-hard.swsl
-index 7998888a89..d9b76b78dc 100644
+index 7998888..d9b76b7 100644
 --- a/Resources/Shaders/Internal/light-hard.swsl
 +++ b/Resources/Shaders/Internal/light-hard.swsl
 @@ -3,9 +3,10 @@
@@ -85,7 +91,7 @@ index 7998888a89..d9b76b78dc 100644
  }
  
 diff --git a/Resources/Shaders/Internal/light-soft.swsl b/Resources/Shaders/Internal/light-soft.swsl
-index 79cfaeeebc..1aa4080eaf 100644
+index 79cfaee..1aa4080 100644
 --- a/Resources/Shaders/Internal/light-soft.swsl
 +++ b/Resources/Shaders/Internal/light-soft.swsl
 @@ -8,11 +8,11 @@ highp vec4 calcGaussianWeights(highp float sigma, highp vec4 offset)
@@ -135,7 +141,7 @@ index 79cfaeeebc..1aa4080eaf 100644
  }
  
 diff --git a/Resources/Shaders/Internal/light_shared.swsl b/Resources/Shaders/Internal/light_shared.swsl
-index 8e2707a85f..b72b97ee08 100644
+index 8e2707a..b72b97e 100644
 --- a/Resources/Shaders/Internal/light_shared.swsl
 +++ b/Resources/Shaders/Internal/light_shared.swsl
 @@ -4,8 +4,6 @@ preset raw;
@@ -169,7 +175,7 @@ index 8e2707a85f..b72b97ee08 100644
  }
  
 diff --git a/Resources/Shaders/Internal/shadow_cast_shared.swsl b/Resources/Shaders/Internal/shadow_cast_shared.swsl
-index 6ed529fee5..1918ef4464 100644
+index 6ed529f..1918ef4 100644
 --- a/Resources/Shaders/Internal/shadow_cast_shared.swsl
 +++ b/Resources/Shaders/Internal/shadow_cast_shared.swsl
 @@ -1,12 +1,13 @@
@@ -215,7 +221,7 @@ index 6ed529fee5..1918ef4464 100644
  }
 +
 diff --git a/Robust.Client.Injectors/CompileRobustXamlTask.cs b/Robust.Client.Injectors/CompileRobustXamlTask.cs
-index 7225f4650d..a31d8905b6 100644
+index 7225f46..a31d890 100644
 --- a/Robust.Client.Injectors/CompileRobustXamlTask.cs
 +++ b/Robust.Client.Injectors/CompileRobustXamlTask.cs
 @@ -1,7 +1,10 @@
@@ -333,7 +339,7 @@ index 7225f4650d..a31d8905b6 100644
      }
  }
 diff --git a/Robust.Client/CommandLineArgs.cs b/Robust.Client/CommandLineArgs.cs
-index 8c6640c46e..c7e37dd5ad 100644
+index 8c6640c..c7e37dd 100644
 --- a/Robust.Client/CommandLineArgs.cs
 +++ b/Robust.Client/CommandLineArgs.cs
 @@ -37,34 +37,32 @@ internal sealed class CommandLineArgs
@@ -461,7 +467,7 @@ index 8c6640c46e..c7e37dd5ad 100644
              else
              {
 diff --git a/Robust.Client/Console/ClientConGroupController.cs b/Robust.Client/Console/ClientConGroupController.cs
-index 6e8109cfd8..3bc1482946 100644
+index 6e8109c..3bc1482 100644
 --- a/Robust.Client/Console/ClientConGroupController.cs
 +++ b/Robust.Client/Console/ClientConGroupController.cs
 @@ -1,4 +1,4 @@
@@ -481,7 +487,7 @@ index 6e8109cfd8..3bc1482946 100644
          }
  
 diff --git a/Robust.Client/ContentStart.cs b/Robust.Client/ContentStart.cs
-index 5e947233e5..6fa6021137 100644
+index 5e94723..6fa6021 100644
 --- a/Robust.Client/ContentStart.cs
 +++ b/Robust.Client/ContentStart.cs
 @@ -4,11 +4,7 @@ namespace Robust.Client
@@ -497,7 +503,7 @@ index 5e947233e5..6fa6021137 100644
  
          public static void StartLibrary(string[] args, GameControllerOptions options)
 diff --git a/Robust.Client/GameController/GameController.Input.cs b/Robust.Client/GameController/GameController.Input.cs
-index a6bc6a0cb5..42ecf99073 100644
+index a6bc6a0..42ecf99 100644
 --- a/Robust.Client/GameController/GameController.Input.cs
 +++ b/Robust.Client/GameController/GameController.Input.cs
 @@ -49,5 +49,10 @@ namespace Robust.Client
@@ -512,7 +518,7 @@ index a6bc6a0cb5..42ecf99073 100644
      }
  }
 diff --git a/Robust.Client/GameController/GameController.IoC.cs b/Robust.Client/GameController/GameController.IoC.cs
-index 6079fa63f3..3e2161bf8d 100644
+index 6079fa6..3e2161b 100644
 --- a/Robust.Client/GameController/GameController.IoC.cs
 +++ b/Robust.Client/GameController/GameController.IoC.cs
 @@ -1,4 +1,4 @@
@@ -541,7 +547,7 @@ index 6079fa63f3..3e2161bf8d 100644
      }
  }
 diff --git a/Robust.Client/GameController/GameController.Standalone.cs b/Robust.Client/GameController/GameController.Standalone.cs
-index de20f0e753..b918ded662 100644
+index de20f0e..b918ded 100644
 --- a/Robust.Client/GameController/GameController.Standalone.cs
 +++ b/Robust.Client/GameController/GameController.Standalone.cs
 @@ -166,7 +166,15 @@ namespace Robust.Client
@@ -562,7 +568,7 @@ index de20f0e753..b918ded662 100644
  
              CleanupGameThread();
 diff --git a/Robust.Client/GameController/GameController.cs b/Robust.Client/GameController/GameController.cs
-index 60fabdcacd..67dde9a42f 100644
+index 60fabdc..67dde9a 100644
 --- a/Robust.Client/GameController/GameController.cs
 +++ b/Robust.Client/GameController/GameController.cs
 @@ -265,7 +265,14 @@ namespace Robust.Client
@@ -672,7 +678,7 @@ index 60fabdcacd..67dde9a42f 100644
              {
                  if (args.Window == _clyde.MainWindow)
 diff --git a/Robust.Client/GameObjects/Components/Renderable/SpriteComponent.cs b/Robust.Client/GameObjects/Components/Renderable/SpriteComponent.cs
-index a183d75729..dafdf9ac92 100644
+index a183d75..dafdf9a 100644
 --- a/Robust.Client/GameObjects/Components/Renderable/SpriteComponent.cs
 +++ b/Robust.Client/GameObjects/Components/Renderable/SpriteComponent.cs
 @@ -658,7 +658,7 @@ namespace Robust.Client.GameObjects
@@ -719,8 +725,111 @@ index a183d75729..dafdf9ac92 100644
              }
  
              private static Matrix3x2[] _rsiDirectionMatrices = new Matrix3x2[]
+diff --git a/Robust.Client/GameObjects/EntitySystems/SpriteSystem.LayerMap.cs b/Robust.Client/GameObjects/EntitySystems/SpriteSystem.LayerMap.cs
+index bdcfff2..5af186a 100644
+--- a/Robust.Client/GameObjects/EntitySystems/SpriteSystem.LayerMap.cs
++++ b/Robust.Client/GameObjects/EntitySystems/SpriteSystem.LayerMap.cs
+@@ -127,7 +127,7 @@ public sealed partial class SpriteSystem
+             return true;
+ 
+         if (logMissing)
+-            Log.Error($"Layer with key '{key}' does not exist on entity {ToPrettyString(sprite)}! Trace:\n{Environment.StackTrace}");
++            Log.Warning($"Layer with key '{key}' does not exist on entity {ToPrettyString(sprite)}!");
+ 
+         return false;
+     }
+@@ -147,7 +147,7 @@ public sealed partial class SpriteSystem
+             return true;
+ 
+         if (logMissing)
+-            Log.Error($"Layer with key '{key}' does not exist on entity {ToPrettyString(sprite)}! Trace:\n{Environment.StackTrace}");
++            Log.Warning($"Layer with key '{key}' does not exist on entity {ToPrettyString(sprite)}!");
+ 
+         return false;
+     }
+diff --git a/Robust.Client/GameObjects/EntitySystems/SpriteSystem.LayerSetters.cs b/Robust.Client/GameObjects/EntitySystems/SpriteSystem.LayerSetters.cs
+index dd1c7e1..1e723b7 100644
+--- a/Robust.Client/GameObjects/EntitySystems/SpriteSystem.LayerSetters.cs
++++ b/Robust.Client/GameObjects/EntitySystems/SpriteSystem.LayerSetters.cs
+@@ -587,15 +587,70 @@ public sealed partial class SpriteSystem
+         {
+             layer._actualState = fallback ?? GetFallbackState();
+             if (logErrors)
+-                Log.Error(
+-                    $"{ToPrettyString(layer.Owner)} has no RSI to pull new state from! Trace:\n{Environment.StackTrace}");
++                Log.Warning(
++                    $"{ToPrettyString(layer.Owner)} has no RSI to pull new state from!");
+         }
+         else if (!rsi.TryGetState(layer.StateId, out layer._actualState))
+         {
+-            layer._actualState = fallback ?? GetFallbackState();
+-            if (logErrors)
+-                Log.Error(
+-                    $"{ToPrettyString(layer.Owner)}'s state '{layer.StateId}' does not exist in RSI {rsi.Path}. Trace:\n{Environment.StackTrace}");
++            var stateStr = layer.StateId.Name ?? string.Empty;
++            var resolved = false;
++
++            // Heuristics for smoothing states (e.g. "0".."15")
++            if (stateStr.Length <= 2 && stateStr.Length > 0 && char.IsDigit(stateStr[0]))
++            {
++                var rsiName = rsi.Path.FilenameWithoutExtension;
++                if (!string.IsNullOrEmpty(rsiName))
++                {
++                    if (rsi.TryGetState($"{rsiName}_{stateStr}", out layer._actualState) ||
++                        rsi.TryGetState($"{rsiName}{stateStr}", out layer._actualState))
++                    {
++                        resolved = true;
++                    }
++                    else
++                    {
++                        var cleanRsiName = rsiName.Replace("-base", "").Replace("_base", "");
++                        if (rsi.TryGetState($"{cleanRsiName}{stateStr}", out layer._actualState) ||
++                            rsi.TryGetState($"{cleanRsiName}_{stateStr}", out layer._actualState))
++                        {
++                            resolved = true;
++                        }
++                    }
++                }
++
++                if (!resolved)
++                {
++                    foreach (var s in rsi)
++                    {
++                        var name = s.StateId.Name;
++                        if (name != null && (name.EndsWith($"_{stateStr}") || name.EndsWith(stateStr)))
++                        {
++                            layer._actualState = s;
++                            resolved = true;
++                            break;
++                        }
++                    }
++                }
++            }
++
++            if (!resolved)
++            {
++                // If it's a numeric smoothing corner state ("0".."15"), NEVER set fallback error sprite!
++                // An invalid corner smoothing layer should simply be hidden rather than rendering
++                // a giant red "ERROR" box over doors/airlocks/structures.
++                if (stateStr.Length <= 2 && stateStr.Length > 0 && char.IsDigit(stateStr[0]))
++                {
++                    layer._actualState = null;
++                }
++                else
++                {
++                    layer._actualState = fallback ?? GetFallbackState();
++                }
++
++                if (logErrors)
++                {
++                    Log.Warning($"{ToPrettyString(layer.Owner)}'s state '{layer.StateId}' does not exist in RSI {rsi.Path}.");
++                }
++            }
+         }
+ 
+         layer.AnimationFrame = 0;
 diff --git a/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Render.cs b/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Render.cs
-index c3ca7a2403..dd1e34d2ca 100644
+index c3ca7a2..dd1e34d 100644
 --- a/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Render.cs
 +++ b/Robust.Client/GameObjects/EntitySystems/SpriteSystem.Render.cs
 @@ -1,3 +1,4 @@
@@ -890,41 +999,8 @@ index c3ca7a2403..dd1e34d2ca 100644
      }
  
      /// <summary>
-diff --git a/Robust.Client/GameObjects/EntitySystems/SpriteSystem.cs b/Robust.Client/GameObjects/EntitySystems/SpriteSystem.cs
-index 0e52fc49d5..16b4b56ed0 100644
---- a/Robust.Client/GameObjects/EntitySystems/SpriteSystem.cs
-+++ b/Robust.Client/GameObjects/EntitySystems/SpriteSystem.cs
-@@ -298,9 +298,23 @@ namespace Robust.Client.GameObjects
-     ///     This event gets raised before a sprite gets drawn using a post-shader that requests it.
-     /// </summary>
-     [ByRefEvent]
--    public readonly record struct BeforePostShaderRenderEvent(
--        string Id,
--        ShaderInstance Shader,
--        SpriteComponent Sprite,
--        IClydeViewport Viewport);
-+    public struct BeforePostShaderRenderEvent
-+    {
-+        public string Id;
-+        public ShaderInstance Shader;
-+        public SpriteComponent Sprite;
-+        public IClydeViewport Viewport;
-+
-+        public BeforePostShaderRenderEvent(
-+            string id,
-+            ShaderInstance shader,
-+            SpriteComponent sprite,
-+            IClydeViewport viewport)
-+        {
-+            Id = id;
-+            Shader = shader;
-+            Sprite = sprite;
-+            Viewport = viewport;
-+        }
-+    }
- }
 diff --git a/Robust.Client/Graphics/Clyde/Clyde.Events.cs b/Robust.Client/Graphics/Clyde/Clyde.Events.cs
-index 029d12c5f6..3ff4be22e4 100644
+index 029d12c..3ff4be2 100644
 --- a/Robust.Client/Graphics/Clyde/Clyde.Events.cs
 +++ b/Robust.Client/Graphics/Clyde/Clyde.Events.cs
 @@ -1,4 +1,4 @@
@@ -960,8 +1036,23 @@ index 029d12c5f6..3ff4be22e4 100644
          private sealed record DEventKeyUp(KeyEventArgs Args) : DEventBase;
  
          private sealed record DEventKeyDown(KeyEventArgs Args) : DEventBase;
+diff --git a/Robust.Client/Graphics/Clyde/Clyde.HLR.cs b/Robust.Client/Graphics/Clyde/Clyde.HLR.cs
+index 7f20d97..6818698 100644
+--- a/Robust.Client/Graphics/Clyde/Clyde.HLR.cs
++++ b/Robust.Client/Graphics/Clyde/Clyde.HLR.cs
+@@ -461,6 +461,10 @@ namespace Robust.Client.Graphics.Clyde
+                         _entityManager.EventBus.RaiseLocalEvent(sprite.Owner, ref args, false);
+                     }
+                 }
++                catch (Exception ex)
++                {
++                    _clydeSawmill.Error($"Exception during BeforePostShaderRenderEvent: {ex}");
++                }
+                 finally
+                 {
+                     _postShaderEventEntries.Clear();
 diff --git a/Robust.Client/Graphics/Clyde/Clyde.LightRendering.cs b/Robust.Client/Graphics/Clyde/Clyde.LightRendering.cs
-index 4be833c945..cec6eb34d3 100644
+index 4be833c..cec6eb3 100644
 --- a/Robust.Client/Graphics/Clyde/Clyde.LightRendering.cs
 +++ b/Robust.Client/Graphics/Clyde/Clyde.LightRendering.cs
 @@ -40,7 +40,7 @@ namespace Robust.Client.Graphics.Clyde
@@ -1152,7 +1243,7 @@ index 4be833c945..cec6eb34d3 100644
              _lightsToRenderList = new LightRenderData[value];
              DebugTools.Assert(_maxLights >= _maxShadowcastingLights);
 diff --git a/Robust.Client/Graphics/Clyde/Clyde.Shaders.cs b/Robust.Client/Graphics/Clyde/Clyde.Shaders.cs
-index 1dc619dc72..632fd50eed 100644
+index 1dc619d..632fd50 100644
 --- a/Robust.Client/Graphics/Clyde/Clyde.Shaders.cs
 +++ b/Robust.Client/Graphics/Clyde/Clyde.Shaders.cs
 @@ -213,6 +213,7 @@ namespace Robust.Client.Graphics.Clyde
@@ -1201,7 +1292,7 @@ index 1dc619dc72..632fd50eed 100644
  
                  return program;
 diff --git a/Robust.Client/Graphics/Clyde/Clyde.Windowing.cs b/Robust.Client/Graphics/Clyde/Clyde.Windowing.cs
-index c77add4c76..221d0346ec 100644
+index c77add4..221d034 100644
 --- a/Robust.Client/Graphics/Clyde/Clyde.Windowing.cs
 +++ b/Robust.Client/Graphics/Clyde/Clyde.Windowing.cs
 @@ -1,4 +1,4 @@
@@ -1219,7 +1310,7 @@ index c77add4c76..221d0346ec 100644
          public event Action<WindowDestroyedEventArgs>? DestroyWindow;
          public event Action<WindowContentScaleEventArgs>? OnWindowScaleChanged;
 diff --git a/Robust.Client/Graphics/Clyde/ClydeHeadless.cs b/Robust.Client/Graphics/Clyde/ClydeHeadless.cs
-index ffc8cd08c3..1dc1a4e8e5 100644
+index ffc8cd0..1dc1a4e 100644
 --- a/Robust.Client/Graphics/Clyde/ClydeHeadless.cs
 +++ b/Robust.Client/Graphics/Clyde/ClydeHeadless.cs
 @@ -64,6 +64,7 @@ namespace Robust.Client.Graphics.Clyde
@@ -1231,7 +1322,7 @@ index ffc8cd08c3..1dc1a4e8e5 100644
          public event Action<WindowDestroyedEventArgs>? DestroyWindow { add { } remove { } }
  
 diff --git a/Robust.Client/Graphics/Clyde/GLContext/GLContextEgl.cs b/Robust.Client/Graphics/Clyde/GLContext/GLContextEgl.cs
-index 9f14125832..16841d6780 100644
+index 9f14125..16841d6 100644
 --- a/Robust.Client/Graphics/Clyde/GLContext/GLContextEgl.cs
 +++ b/Robust.Client/Graphics/Clyde/GLContext/GLContextEgl.cs
 @@ -1,4 +1,4 @@
@@ -1241,7 +1332,7 @@ index 9f14125832..16841d6780 100644
  using System.Runtime.InteropServices;
  using System.Text;
 diff --git a/Robust.Client/Graphics/Clyde/GLContext/GLContextWindow.cs b/Robust.Client/Graphics/Clyde/GLContext/GLContextWindow.cs
-index 55b8bcacec..c2e6cec4ac 100644
+index 55b8bca..c2e6cec 100644
 --- a/Robust.Client/Graphics/Clyde/GLContext/GLContextWindow.cs
 +++ b/Robust.Client/Graphics/Clyde/GLContext/GLContextWindow.cs
 @@ -52,7 +52,7 @@ namespace Robust.Client.Graphics.Clyde
@@ -1254,7 +1345,7 @@ index 55b8bcacec..c2e6cec4ac 100644
  
              public GLContextWindow(Clyde clyde) : base(clyde)
 diff --git a/Robust.Client/Graphics/Clyde/Shaders/base-default.vert b/Robust.Client/Graphics/Clyde/Shaders/base-default.vert
-index 35e2c40937..429d408be0 100644
+index 35e2c40..429d408 100644
 --- a/Robust.Client/Graphics/Clyde/Shaders/base-default.vert
 +++ b/Robust.Client/Graphics/Clyde/Shaders/base-default.vert
 @@ -6,11 +6,11 @@
@@ -1275,7 +1366,7 @@ index 35e2c40937..429d408be0 100644
  // Maybe we should merge these CPU side.
  // idk yet.
 diff --git a/Robust.Client/Graphics/Clyde/Shaders/base-raw.vert b/Robust.Client/Graphics/Clyde/Shaders/base-raw.vert
-index 5767744272..b8d4e25d2b 100644
+index 5767744..b8d4e25 100644
 --- a/Robust.Client/Graphics/Clyde/Shaders/base-raw.vert
 +++ b/Robust.Client/Graphics/Clyde/Shaders/base-raw.vert
 @@ -6,9 +6,9 @@
@@ -1292,7 +1383,7 @@ index 5767744272..b8d4e25d2b 100644
  // Maybe we should merge these CPU side.
  // idk yet.
 diff --git a/Robust.Client/Graphics/Clyde/Shaders/shadow-depth.frag b/Robust.Client/Graphics/Clyde/Shaders/shadow-depth.frag
-index afb8f1835a..e4c418431d 100644
+index afb8f18..e4c4184 100644
 --- a/Robust.Client/Graphics/Clyde/Shaders/shadow-depth.frag
 +++ b/Robust.Client/Graphics/Clyde/Shaders/shadow-depth.frag
 @@ -10,7 +10,9 @@ void main()
@@ -1307,7 +1398,7 @@ index afb8f1835a..e4c418431d 100644
      // Main body.
  #ifdef HAS_DFDX
 diff --git a/Robust.Client/Graphics/Clyde/Shaders/shadow-depth.vert b/Robust.Client/Graphics/Clyde/Shaders/shadow-depth.vert
-index 76c0d73c38..94426904c8 100644
+index 76c0d73..9442690 100644
 --- a/Robust.Client/Graphics/Clyde/Shaders/shadow-depth.vert
 +++ b/Robust.Client/Graphics/Clyde/Shaders/shadow-depth.vert
 @@ -12,7 +12,7 @@ attribute vec4 aPos;
@@ -1346,7 +1437,7 @@ index 76c0d73c38..94426904c8 100644
          // Angle
          targetAngle,
 diff --git a/Robust.Client/Graphics/Clyde/Shaders/winblit.vert b/Robust.Client/Graphics/Clyde/Shaders/winblit.vert
-index 75211d3bad..a0f5bee5af 100644
+index 75211d3..a0f5bee 100644
 --- a/Robust.Client/Graphics/Clyde/Shaders/winblit.vert
 +++ b/Robust.Client/Graphics/Clyde/Shaders/winblit.vert
 @@ -10,7 +10,7 @@
@@ -1359,7 +1450,7 @@ index 75211d3bad..a0f5bee5af 100644
  void main()
  {
 diff --git a/Robust.Client/Graphics/Clyde/Windowing/Sdl3.Event.cs b/Robust.Client/Graphics/Clyde/Windowing/Sdl3.Event.cs
-index da4d28f69c..7ee104a920 100644
+index da4d28f..7ee104a 100644
 --- a/Robust.Client/Graphics/Clyde/Windowing/Sdl3.Event.cs
 +++ b/Robust.Client/Graphics/Clyde/Windowing/Sdl3.Event.cs
 @@ -1,9 +1,10 @@
@@ -1488,7 +1579,7 @@ index da4d28f69c..7ee104a920 100644
  
              _clyde._currentHoveredWindow = windowReg;
 diff --git a/Robust.Client/Graphics/Clyde/Windowing/Sdl3.RawEvent.cs b/Robust.Client/Graphics/Clyde/Windowing/Sdl3.RawEvent.cs
-index 1b6cdba42b..af2cb75aa1 100644
+index 1b6cdba..af2cb75 100644
 --- a/Robust.Client/Graphics/Clyde/Windowing/Sdl3.RawEvent.cs
 +++ b/Robust.Client/Graphics/Clyde/Windowing/Sdl3.RawEvent.cs
 @@ -1,4 +1,4 @@
@@ -1550,7 +1641,7 @@ index 1b6cdba42b..af2cb75aa1 100644
  
  #if MACOS
 diff --git a/Robust.Client/Graphics/Clyde/Windowing/Sdl3.Window.cs b/Robust.Client/Graphics/Clyde/Windowing/Sdl3.Window.cs
-index 70fa5edb40..51b60611de 100644
+index 70fa5ed..51b6061 100644
 --- a/Robust.Client/Graphics/Clyde/Windowing/Sdl3.Window.cs
 +++ b/Robust.Client/Graphics/Clyde/Windowing/Sdl3.Window.cs
 @@ -1,4 +1,4 @@
@@ -1702,7 +1793,7 @@ index 70fa5edb40..51b60611de 100644
          }
  
 diff --git a/Robust.Client/Graphics/Clyde/Windowing/Sdl3.cs b/Robust.Client/Graphics/Clyde/Windowing/Sdl3.cs
-index a02709bfae..d57ddf6d7f 100644
+index a02709b..d57ddf6 100644
 --- a/Robust.Client/Graphics/Clyde/Windowing/Sdl3.cs
 +++ b/Robust.Client/Graphics/Clyde/Windowing/Sdl3.cs
 @@ -1,4 +1,4 @@
@@ -1720,7 +1811,7 @@ index a02709bfae..d57ddf6d7f 100644
              if (!res)
              {
 diff --git a/Robust.Client/Graphics/Drawing/DrawingHandleScreen.cs b/Robust.Client/Graphics/Drawing/DrawingHandleScreen.cs
-index 1f5c193014..27a25f60db 100644
+index 1f5c193..27a25f6 100644
 --- a/Robust.Client/Graphics/Drawing/DrawingHandleScreen.cs
 +++ b/Robust.Client/Graphics/Drawing/DrawingHandleScreen.cs
 @@ -154,6 +154,9 @@ namespace Robust.Client.Graphics
@@ -1734,7 +1825,7 @@ index 1f5c193014..27a25f60db 100644
          {
              var advanceTotal = Vector2.Zero;
 diff --git a/Robust.Client/Graphics/IClydeInternal.cs b/Robust.Client/Graphics/IClydeInternal.cs
-index 388522f315..6d889cfb5e 100644
+index 388522f..6d889cf 100644
 --- a/Robust.Client/Graphics/IClydeInternal.cs
 +++ b/Robust.Client/Graphics/IClydeInternal.cs
 @@ -32,6 +32,7 @@ namespace Robust.Client.Graphics
@@ -1746,7 +1837,7 @@ index 388522f315..6d889cfb5e 100644
          event Action<WindowDestroyedEventArgs> DestroyWindow;
  
 diff --git a/Robust.Client/Graphics/RSI/RSI.State.cs b/Robust.Client/Graphics/RSI/RSI.State.cs
-index 87b3f7db39..8f6f9f528b 100644
+index 87b3f7d..8f6f9f5 100644
 --- a/Robust.Client/Graphics/RSI/RSI.State.cs
 +++ b/Robust.Client/Graphics/RSI/RSI.State.cs
 @@ -95,17 +95,28 @@ namespace Robust.Client.Graphics
@@ -1782,7 +1873,7 @@ index 87b3f7db39..8f6f9f528b 100644
  
              /// <summary>
 diff --git a/Robust.Client/Input/InputManager.cs b/Robust.Client/Input/InputManager.cs
-index e4aeda9a19..8c7134099a 100644
+index e4aeda9..8c71340 100644
 --- a/Robust.Client/Input/InputManager.cs
 +++ b/Robust.Client/Input/InputManager.cs
 @@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
@@ -1857,7 +1948,7 @@ index e4aeda9a19..8c7134099a 100644
              var hasCanFocus = false;
 diff --git a/Robust.Client/Input/TouchFingerEventArgs.cs b/Robust.Client/Input/TouchFingerEventArgs.cs
 new file mode 100644
-index 0000000000..c139d8f4c2
+index 0000000..c139d8f
 --- /dev/null
 +++ b/Robust.Client/Input/TouchFingerEventArgs.cs
 @@ -0,0 +1,27 @@
@@ -1889,7 +1980,7 @@ index 0000000000..c139d8f4c2
 +    }
 +}
 diff --git a/Robust.Client/Robust.Client.csproj b/Robust.Client/Robust.Client.csproj
-index 6ee0278b6c..a3b0fef859 100644
+index 6ee0278..a3b0fef 100644
 --- a/Robust.Client/Robust.Client.csproj
 +++ b/Robust.Client/Robust.Client.csproj
 @@ -1,9 +1,9 @@
@@ -1905,7 +1996,7 @@ index 6ee0278b6c..a3b0fef859 100644
      <NoWarn>NU1701;CA1416</NoWarn>
      <OutputPath>../bin/Client</OutputPath>
 diff --git a/Robust.Client/UserInterface/Control.Layout.cs b/Robust.Client/UserInterface/Control.Layout.cs
-index 2c7ef9c72b..d7f4f36ca3 100644
+index 2c7ef9c..d7f4f36 100644
 --- a/Robust.Client/UserInterface/Control.Layout.cs
 +++ b/Robust.Client/UserInterface/Control.Layout.cs
 @@ -40,6 +40,7 @@ namespace Robust.Client.UserInterface
@@ -1948,7 +2039,7 @@ index 2c7ef9c72b..d7f4f36ca3 100644
              switch (HorizontalAlignment)
              {
 diff --git a/Robust.Client/UserInterface/Controllers/UserInterfaceManager.Controllers.cs b/Robust.Client/UserInterface/Controllers/UserInterfaceManager.Controllers.cs
-index 9ed8f51986..f84eaedd9f 100644
+index 9ed8f51..f84eaed 100644
 --- a/Robust.Client/UserInterface/Controllers/UserInterfaceManager.Controllers.cs
 +++ b/Robust.Client/UserInterface/Controllers/UserInterfaceManager.Controllers.cs
 @@ -1,4 +1,4 @@
@@ -1974,7 +2065,7 @@ index 9ed8f51986..f84eaedd9f 100644
      }
  
 diff --git a/Robust.Client/UserInterface/Controls/ItemList.cs b/Robust.Client/UserInterface/Controls/ItemList.cs
-index d3cce9847b..771b5b7721 100644
+index d3cce98..771b5b7 100644
 --- a/Robust.Client/UserInterface/Controls/ItemList.cs
 +++ b/Robust.Client/UserInterface/Controls/ItemList.cs
 @@ -646,6 +646,13 @@ namespace Robust.Client.UserInterface.Controls
@@ -1992,7 +2083,7 @@ index d3cce9847b..771b5b7721 100644
          private int _getScrollSpeed()
          {
 diff --git a/Robust.Client/UserInterface/Controls/LineEdit.cs b/Robust.Client/UserInterface/Controls/LineEdit.cs
-index 7aff690152..5bafdfc235 100644
+index 7aff690..5bafdfc 100644
 --- a/Robust.Client/UserInterface/Controls/LineEdit.cs
 +++ b/Robust.Client/UserInterface/Controls/LineEdit.cs
 @@ -336,9 +336,12 @@ namespace Robust.Client.UserInterface.Controls
@@ -2009,7 +2100,7 @@ index 7aff690152..5bafdfc235 100644
              OnTextTyped?.Invoke(args);
          }
 diff --git a/Robust.Client/UserInterface/Controls/OutputPanel.cs b/Robust.Client/UserInterface/Controls/OutputPanel.cs
-index 7242443b5a..2780de2e32 100644
+index 7242443..2780de2 100644
 --- a/Robust.Client/UserInterface/Controls/OutputPanel.cs
 +++ b/Robust.Client/UserInterface/Controls/OutputPanel.cs
 @@ -261,6 +261,12 @@ namespace Robust.Client.UserInterface.Controls
@@ -2026,7 +2117,7 @@ index 7242443b5a..2780de2e32 100644
          {
              base.Resized();
 diff --git a/Robust.Client/UserInterface/Controls/ScrollBar.cs b/Robust.Client/UserInterface/Controls/ScrollBar.cs
-index 7d5d1b2efd..0f138aa460 100644
+index 7d5d1b2..0f138aa 100644
 --- a/Robust.Client/UserInterface/Controls/ScrollBar.cs
 +++ b/Robust.Client/UserInterface/Controls/ScrollBar.cs
 @@ -108,7 +108,22 @@ namespace Robust.Client.UserInterface.Controls
@@ -2053,8 +2144,84 @@ index 7d5d1b2efd..0f138aa460 100644
              }
  
              _grabData = (args.RelativePixelPosition, Value);
+diff --git a/Robust.Client/UserInterface/Controls/SpriteView.cs b/Robust.Client/UserInterface/Controls/SpriteView.cs
+index ddf069d..e64292e 100644
+--- a/Robust.Client/UserInterface/Controls/SpriteView.cs
++++ b/Robust.Client/UserInterface/Controls/SpriteView.cs
+@@ -227,37 +227,44 @@ namespace Robust.Client.UserInterface.Controls
+ 
+         protected internal override void Draw(IRenderHandle renderHandle)
+         {
+-            if (!ResolveEntity(out var uid, out var sprite, out var xform))
+-                return;
++            try
++            {
++                if (!ResolveEntity(out var uid, out var sprite, out var xform))
++                    return;
++
++                SpriteSystem ??= EntMan.System<SpriteSystem>();
++                _transform ??= EntMan.System<TransformSystem>();
++
++                // Ensure the sprite is animated despite possible not being visible in any viewport.
++                SpriteSystem.ForceUpdate(uid);
+ 
+-            SpriteSystem ??= EntMan.System<SpriteSystem>();
+-            _transform ??= EntMan.System<TransformSystem>();
++                var stretchVec = Stretch switch
++                {
++                    StretchMode.Fit => Vector2.Min(Size / _spriteSize, Vector2.One),
++                    StretchMode.Fill => Size / _spriteSize,
++                    _ => Vector2.One,
++                };
++                var stretch = MathF.Min(stretchVec.X, stretchVec.Y);
+ 
+-            // Ensure the sprite is animated despite possible not being visible in any viewport.
+-            SpriteSystem.ForceUpdate(uid);
++                var offset = SpriteOffset
++                    ? Vector2.Zero
++                    : - (-_eyeRotation).RotateVec(sprite.Offset * _scale) * new Vector2(1, -1) * EyeManager.PixelsPerMeter;
+ 
+-            var stretchVec = Stretch switch
++                var position = PixelSize / 2 + offset * stretch * UIScale;
++                var scale = Scale * UIScale * stretch;
++
++                // control modulation is applied automatically to the screen handle, but here we need to use the world handle
++                var world = renderHandle.DrawingHandleWorld;
++                var oldModulate = world.Modulate;
++                world.Modulate *= Modulate * ActualModulateSelf;
++
++                renderHandle.DrawEntity(uid, position, scale, _worldRotation, _eyeRotation, OverrideDirection, sprite, xform, _transform);
++                world.Modulate = oldModulate;
++            }
++            catch (Exception)
+             {
+-                StretchMode.Fit => Vector2.Min(Size / _spriteSize, Vector2.One),
+-                StretchMode.Fill => Size / _spriteSize,
+-                _ => Vector2.One,
+-            };
+-            var stretch = MathF.Min(stretchVec.X, stretchVec.Y);
+-
+-            var offset = SpriteOffset
+-                ? Vector2.Zero
+-                : - (-_eyeRotation).RotateVec(sprite.Offset * _scale) * new Vector2(1, -1) * EyeManager.PixelsPerMeter;
+-
+-            var position = PixelSize / 2 + offset * stretch * UIScale;
+-            var scale = Scale * UIScale * stretch;
+-
+-            // control modulation is applied automatically to the screen handle, but here we need to use the world handle
+-            var world = renderHandle.DrawingHandleWorld;
+-            var oldModulate = world.Modulate;
+-            world.Modulate *= Modulate * ActualModulateSelf;
+-
+-            renderHandle.DrawEntity(uid, position, scale, _worldRotation, _eyeRotation, OverrideDirection, sprite, xform, _transform);
+-            world.Modulate = oldModulate;
++                // Never crash UI on sprite draw errors
++            }
+         }
+ 
+         private bool ResolveEntity(
 diff --git a/Robust.Client/UserInterface/Controls/TextEdit.cs b/Robust.Client/UserInterface/Controls/TextEdit.cs
-index 72d61cbe30..d432c594d5 100644
+index 72d61cb..d432c59 100644
 --- a/Robust.Client/UserInterface/Controls/TextEdit.cs
 +++ b/Robust.Client/UserInterface/Controls/TextEdit.cs
 @@ -1,4 +1,4 @@
@@ -2073,7 +2240,7 @@ index 72d61cbe30..d432c594d5 100644
          _blink.Reset();
          EnsureCursorVisible();
 diff --git a/Robust.Client/UserInterface/CustomControls/DefaultWindow.xaml.cs b/Robust.Client/UserInterface/CustomControls/DefaultWindow.xaml.cs
-index 5be710c83a..41de6738fd 100644
+index 5be710c..41de673 100644
 --- a/Robust.Client/UserInterface/CustomControls/DefaultWindow.xaml.cs
 +++ b/Robust.Client/UserInterface/CustomControls/DefaultWindow.xaml.cs
 @@ -58,7 +58,7 @@ namespace Robust.Client.UserInterface.CustomControls
@@ -2104,7 +2271,7 @@ index 5be710c83a..41de6738fd 100644
                  mode = DragMode.Move;
              }
 diff --git a/Robust.Client/UserInterface/IUserInterfaceManagerInternal.cs b/Robust.Client/UserInterface/IUserInterfaceManagerInternal.cs
-index 29c54bc48a..a21a747e49 100644
+index 29c54bc..a21a747 100644
 --- a/Robust.Client/UserInterface/IUserInterfaceManagerInternal.cs
 +++ b/Robust.Client/UserInterface/IUserInterfaceManagerInternal.cs
 @@ -29,6 +29,7 @@ namespace Robust.Client.UserInterface
@@ -2117,10 +2284,10 @@ index 29c54bc48a..a21a747e49 100644
  
 diff --git a/Robust.Client/UserInterface/Mobile/MobileControlsOverlay.cs b/Robust.Client/UserInterface/Mobile/MobileControlsOverlay.cs
 new file mode 100644
-index 0000000000..f1651ce140
+index 0000000..9f2ea62
 --- /dev/null
 +++ b/Robust.Client/UserInterface/Mobile/MobileControlsOverlay.cs
-@@ -0,0 +1,1133 @@
+@@ -0,0 +1,1259 @@
 +using System;
 +using System.Collections.Generic;
 +using System.Globalization;
@@ -2130,17 +2297,23 @@ index 0000000000..f1651ce140
 +using Robust.Client.Input;
 +using Robust.Client.UserInterface;
 +using Robust.Client.UserInterface.Controls;
++using Robust.Client.UserInterface.CustomControls;
 +using Robust.Shared;
 +using Robust.Shared.Configuration;
 +using Robust.Shared.Input;
 +using Robust.Shared.IoC;
++using Robust.Shared.Map;
 +using Robust.Shared.Maths;
++
 +
 +namespace Robust.Client.UserInterface.Mobile;
 +
 +public sealed partial class MobileControlsOverlay : Control
 +{
 +    [Dependency] private readonly IConfigurationManager _cfg = default!;
++    [Dependency] private readonly IUserInterfaceManagerInternal _uiMgr = default!;
++    [Dependency] private readonly IClyde _clyde = default!;
++
 +
 +    public static bool IsEditMode { get; private set; }
 +
@@ -2202,6 +2375,12 @@ index 0000000000..f1651ce140
 +    private readonly PojavActionButton _throwButton;
 +
 +    private readonly Dictionary<long, Control> _claimedTouches = new();
++    private readonly Dictionary<long, Vector2> _freeTouches = new();
++    private float _pinchLastDistance = 0f;
++    private float _pinchAccumDelta = 0f;
++    private bool _wasPinching = false;
++
++
 +
 +    private readonly PojavActionButton _escButton;
 +    private readonly PojavActionButton _keybButton;
@@ -2833,6 +3012,19 @@ index 0000000000..f1651ce140
 +                    }
 +                }
 +
++                // If not claimed by buttons or stick, track as free touch for pinch-to-zoom
++                _freeTouches[args.FingerId] = args.Coordinates.Position;
++                if (_freeTouches.Count >= 2)
++                {
++                    var p1 = GetPinchTouchPos(0);
++                    var p2 = GetPinchTouchPos(1);
++                    _pinchLastDistance = Vector2.Distance(p1, p2);
++                    _pinchAccumDelta = 0f;
++                    _wasPinching = true;
++                    return true;
++
++                }
++
 +                return false;
 +            }
 +
@@ -2847,6 +3039,39 @@ index 0000000000..f1651ce140
 +                    }
 +                    return true;
 +                }
++
++                if (_freeTouches.ContainsKey(args.FingerId))
++                {
++                    _freeTouches[args.FingerId] = args.Coordinates.Position;
++                    if (_freeTouches.Count >= 2)
++                    {
++                        var p1 = GetPinchTouchPos(0);
++                        var p2 = GetPinchTouchPos(1);
++                        var currentDist = Vector2.Distance(p1, p2);
++                        var delta = currentDist - _pinchLastDistance;
++                        _pinchLastDistance = currentDist;
++                        _pinchAccumDelta += delta;
++                        _wasPinching = true;
++
++                        var scale = UIScale > 0 ? UIScale : 1f;
++                        var threshold = 45f * scale;
++                        var midpoint = (p1 + p2) * 0.5f;
++
++                        while (_pinchAccumDelta >= threshold)
++                        {
++                            _pinchAccumDelta -= threshold;
++                            TriggerPinchZoom(midpoint, zoomIn: true);
++                        }
++                        while (_pinchAccumDelta <= -threshold)
++                        {
++                            _pinchAccumDelta += threshold;
++                            TriggerPinchZoom(midpoint, zoomIn: false);
++                        }
++
++                        return true;
++                    }
++                }
++
 +                return false;
 +            }
 +
@@ -2865,12 +3090,80 @@ index 0000000000..f1651ce140
 +                    }
 +                    return true;
 +                }
++
++                if (_freeTouches.Remove(args.FingerId))
++                {
++                    if (_freeTouches.Count < 2)
++                    {
++                        _pinchAccumDelta = 0f;
++                    }
++
++                    if (_wasPinching)
++                    {
++                        if (_freeTouches.Count == 0)
++                            _wasPinching = false;
++                        return true;
++                    }
++                }
++
++
 +                return false;
 +            }
 +        }
 +
 +        return false;
 +    }
++
++    private Vector2 GetPinchTouchPos(int index)
++    {
++        int i = 0;
++        foreach (var val in _freeTouches.Values)
++        {
++            if (i == index)
++                return val;
++            i++;
++        }
++        return Vector2.Zero;
++    }
++
++    private IViewportControl? FindViewportControl(Control parent)
++    {
++        if (parent is IViewportControl vp)
++            return vp;
++
++        for (int i = 0; i < parent.ChildCount; i++)
++        {
++            var child = parent.GetChild(i);
++            var res = FindViewportControl(child);
++            if (res != null)
++                return res;
++        }
++
++        return null;
++    }
++
++    private void TriggerPinchZoom(Vector2 midpoint, bool zoomIn)
++    {
++        var delta = zoomIn ? new Vector2(0, 1) : new Vector2(0, -1);
++        var windowId = _clyde.MainWindow?.Id ?? default;
++        var screenCoords = new ScreenCoordinates(midpoint, windowId);
++        var mouseWheelArgs = new MouseWheelEventArgs(delta, screenCoords);
++        _uiMgr.MouseWheel(mouseWheelArgs);
++
++        if (!mouseWheelArgs.Handled && _uiMgr.ActiveScreen != null)
++        {
++            var vp = FindViewportControl(_uiMgr.ActiveScreen);
++            if (vp is Control vpControl)
++            {
++                var guiArgs = new GUIMouseWheelEventArgs(delta, vpControl,
++                    midpoint / vpControl.UIScale, screenCoords,
++                    midpoint / vpControl.UIScale - vpControl.GlobalPosition,
++                    midpoint - vpControl.GlobalPixelPosition);
++                vpControl.MouseWheel(guiArgs);
++            }
++        }
++    }
++
 +
 +    public void UpdateStyling()
 +    {
@@ -3256,7 +3549,7 @@ index 0000000000..f1651ce140
 +}
 diff --git a/Robust.Client/UserInterface/Mobile/PojavActionButton.cs b/Robust.Client/UserInterface/Mobile/PojavActionButton.cs
 new file mode 100644
-index 0000000000..4f00e0ab68
+index 0000000..4f00e0a
 --- /dev/null
 +++ b/Robust.Client/UserInterface/Mobile/PojavActionButton.cs
 @@ -0,0 +1,370 @@
@@ -3632,7 +3925,7 @@ index 0000000000..4f00e0ab68
 +}
 diff --git a/Robust.Client/UserInterface/Mobile/VirtualThumbstick.cs b/Robust.Client/UserInterface/Mobile/VirtualThumbstick.cs
 new file mode 100644
-index 0000000000..cf0d6ed3d7
+index 0000000..cf0d6ed
 --- /dev/null
 +++ b/Robust.Client/UserInterface/Mobile/VirtualThumbstick.cs
 @@ -0,0 +1,315 @@
@@ -3952,7 +4245,7 @@ index 0000000000..cf0d6ed3d7
 +    }
 +}
 diff --git a/Robust.Client/UserInterface/Stylesheets/DefaultStylesheet.cs b/Robust.Client/UserInterface/Stylesheets/DefaultStylesheet.cs
-index 72575887ce..f6cab0f82c 100644
+index 7257588..f6cab0f 100644
 --- a/Robust.Client/UserInterface/Stylesheets/DefaultStylesheet.cs
 +++ b/Robust.Client/UserInterface/Stylesheets/DefaultStylesheet.cs
 @@ -1,4 +1,5 @@
@@ -3993,7 +4286,7 @@ index 72575887ce..f6cab0f82c 100644
  
          Stylesheet = new Stylesheet(new StyleRule[]
 diff --git a/Robust.Client/UserInterface/UserInterfaceManager.Input.cs b/Robust.Client/UserInterface/UserInterfaceManager.Input.cs
-index 274aa2abc0..f8a5fe9660 100644
+index 274aa2a..f8a5fe9 100644
 --- a/Robust.Client/UserInterface/UserInterfaceManager.Input.cs
 +++ b/Robust.Client/UserInterface/UserInterfaceManager.Input.cs
 @@ -46,6 +46,29 @@ internal partial class UserInterfaceManager
@@ -4142,7 +4435,7 @@ index 274aa2abc0..f8a5fe9660 100644
 +    }
  }
 diff --git a/Robust.Client/UserInterface/UserInterfaceManager.cs b/Robust.Client/UserInterface/UserInterfaceManager.cs
-index 57c86c3518..9726191f39 100644
+index 57c86c3..9726191 100644
 --- a/Robust.Client/UserInterface/UserInterfaceManager.cs
 +++ b/Robust.Client/UserInterface/UserInterfaceManager.cs
 @@ -52,6 +52,7 @@ namespace Robust.Client.UserInterface
@@ -4169,7 +4462,7 @@ index 57c86c3518..9726191f39 100644
  
          public void InitializeTesting()
 diff --git a/Robust.Client/UserInterface/XAML/Proxy/XamlHotReloadManager.cs b/Robust.Client/UserInterface/XAML/Proxy/XamlHotReloadManager.cs
-index d6a83e8d72..ed7b1ae828 100644
+index d6a83e8..ed7b1ae 100644
 --- a/Robust.Client/UserInterface/XAML/Proxy/XamlHotReloadManager.cs
 +++ b/Robust.Client/UserInterface/XAML/Proxy/XamlHotReloadManager.cs
 @@ -1,4 +1,4 @@
@@ -4197,7 +4490,7 @@ index d6a83e8d72..ed7b1ae828 100644
                  if (newPath == null)
                  {
 diff --git a/Robust.Shared.CompNetworkGenerator/ComponentNetworkGenerator.cs b/Robust.Shared.CompNetworkGenerator/ComponentNetworkGenerator.cs
-index 4a82cfeb8c..9428b2838e 100644
+index 4a82cfe..9428b28 100644
 --- a/Robust.Shared.CompNetworkGenerator/ComponentNetworkGenerator.cs
 +++ b/Robust.Shared.CompNetworkGenerator/ComponentNetworkGenerator.cs
 @@ -1,4 +1,4 @@
@@ -4230,7 +4523,7 @@ index 4a82cfeb8c..9428b2838e 100644
                      var source = GenerateSource(context, classType, classSyntax, comp, raiseEv, fieldDeltas, excludeReplays);
                      // can be null if no members marked with network field, which already has a diagnostic, so
 diff --git a/Robust.Shared/Analyzers/ComponentNetworkGeneratorAuxiliary.cs b/Robust.Shared/Analyzers/ComponentNetworkGeneratorAuxiliary.cs
-index 18703ca0c8..43496a3810 100644
+index 18703ca..43496a3 100644
 --- a/Robust.Shared/Analyzers/ComponentNetworkGeneratorAuxiliary.cs
 +++ b/Robust.Shared/Analyzers/ComponentNetworkGeneratorAuxiliary.cs
 @@ -1,4 +1,4 @@
@@ -4283,7 +4576,7 @@ index 18703ca0c8..43496a3810 100644
  
  /// <summary>
 diff --git a/Robust.Shared/CVars.cs b/Robust.Shared/CVars.cs
-index d4c004f4ae..bc012ba66a 100644
+index d4c004f..bc012ba 100644
 --- a/Robust.Shared/CVars.cs
 +++ b/Robust.Shared/CVars.cs
 @@ -992,38 +992,44 @@ namespace Robust.Shared
@@ -4384,7 +4677,7 @@ index d4c004f4ae..bc012ba66a 100644
          /// The window icon set to use. Overriden by <c>GameControllerOptions</c> on startup.
          /// </summary>
 diff --git a/Robust.Shared/Configuration/ConfigurationManager.cs b/Robust.Shared/Configuration/ConfigurationManager.cs
-index 72844ae3dd..649a4c4632 100644
+index 72844ae..649a4c4 100644
 --- a/Robust.Shared/Configuration/ConfigurationManager.cs
 +++ b/Robust.Shared/Configuration/ConfigurationManager.cs
 @@ -531,11 +531,29 @@ namespace Robust.Shared.Configuration
@@ -4422,7 +4715,7 @@ index 72844ae3dd..649a4c4632 100644
          }
  
 diff --git a/Robust.Shared/ContentPack/BaseModLoader.cs b/Robust.Shared/ContentPack/BaseModLoader.cs
-index 93a6d1a59d..4163d2a7bb 100644
+index 93a6d1a..4163d2a 100644
 --- a/Robust.Shared/ContentPack/BaseModLoader.cs
 +++ b/Robust.Shared/ContentPack/BaseModLoader.cs
 @@ -1,4 +1,4 @@
@@ -4533,7 +4826,7 @@ index 93a6d1a59d..4163d2a7bb 100644
  
          public bool IsContentAssembly(Assembly typeAssembly)
 diff --git a/Robust.Shared/ContentPack/DirLoader.cs b/Robust.Shared/ContentPack/DirLoader.cs
-index 2524f06062..416ccbdf52 100644
+index 2524f06..416ccbd 100644
 --- a/Robust.Shared/ContentPack/DirLoader.cs
 +++ b/Robust.Shared/ContentPack/DirLoader.cs
 @@ -1,4 +1,4 @@
@@ -4584,7 +4877,7 @@ index 2524f06062..416ccbdf52 100644
                  // GetFiles returns full paths, we want them relative to root
                  foreach (var filePath in paths)
 diff --git a/Robust.Shared/ContentPack/IResourceManagerInternal.cs b/Robust.Shared/ContentPack/IResourceManagerInternal.cs
-index 3ccce3e535..3aa3a8395f 100644
+index 3ccce3e..3aa3a83 100644
 --- a/Robust.Shared/ContentPack/IResourceManagerInternal.cs
 +++ b/Robust.Shared/ContentPack/IResourceManagerInternal.cs
 @@ -1,4 +1,4 @@
@@ -4606,7 +4899,7 @@ index 3ccce3e535..3aa3a8395f 100644
          /// <summary>
          ///     Adds a directory to search inside of to the VFS. The directory is relative to
 diff --git a/Robust.Shared/ContentPack/PackLoader.cs b/Robust.Shared/ContentPack/PackLoader.cs
-index 2c3244b1da..dc82baba35 100644
+index 2c3244b..dc82bab 100644
 --- a/Robust.Shared/ContentPack/PackLoader.cs
 +++ b/Robust.Shared/ContentPack/PackLoader.cs
 @@ -1,4 +1,5 @@
@@ -4696,7 +4989,7 @@ index 2c3244b1da..dc82baba35 100644
                  }
              }
 diff --git a/Robust.Shared/ContentPack/PathHelpers.cs b/Robust.Shared/ContentPack/PathHelpers.cs
-index 64ffaee3c0..0cabecba43 100644
+index 64ffaee..0cabecb 100644
 --- a/Robust.Shared/ContentPack/PathHelpers.cs
 +++ b/Robust.Shared/ContentPack/PathHelpers.cs
 @@ -1,4 +1,4 @@
@@ -4733,7 +5026,7 @@ index 64ffaee3c0..0cabecba43 100644
              return Path.GetDirectoryName(location)!;
          }
 diff --git a/Robust.Shared/ContentPack/ResourceManager.cs b/Robust.Shared/ContentPack/ResourceManager.cs
-index b58f22eb18..a32d9b75f7 100644
+index b58f22e..a32d9b7 100644
 --- a/Robust.Shared/ContentPack/ResourceManager.cs
 +++ b/Robust.Shared/ContentPack/ResourceManager.cs
 @@ -1,4 +1,4 @@
@@ -4771,7 +5064,7 @@ index b58f22eb18..a32d9b75f7 100644
          }
  
 diff --git a/Robust.Shared/GameObjects/Component.cs b/Robust.Shared/GameObjects/Component.cs
-index e2679c7798..84421b9838 100644
+index e2679c7..84421b9 100644
 --- a/Robust.Shared/GameObjects/Component.cs
 +++ b/Robust.Shared/GameObjects/Component.cs
 @@ -27,6 +27,7 @@ namespace Robust.Shared.GameObjects
@@ -4799,7 +5092,7 @@ index e2679c7798..84421b9838 100644
          [ViewVariables]
          public bool Initialized => LifeStage >= ComponentLifeStage.Initializing;
 diff --git a/Robust.Shared/GameObjects/ComponentFactory.cs b/Robust.Shared/GameObjects/ComponentFactory.cs
-index 509cf09cd7..7289da8df2 100644
+index 509cf09..7289da8 100644
 --- a/Robust.Shared/GameObjects/ComponentFactory.cs
 +++ b/Robust.Shared/GameObjects/ComponentFactory.cs
 @@ -484,18 +484,28 @@ namespace Robust.Shared.GameObjects
@@ -4836,7 +5129,7 @@ index 509cf09cd7..7289da8df2 100644
              _typeToIdx = typeToidx.ToFrozenDictionary();
              _names = names.ToFrozenDictionary();
 diff --git a/Robust.Shared/GameObjects/Components/Light/OccluderComponent.cs b/Robust.Shared/GameObjects/Components/Light/OccluderComponent.cs
-index b5d321f0d8..23c44d2531 100644
+index b5d321f..23c44d2 100644
 --- a/Robust.Shared/GameObjects/Components/Light/OccluderComponent.cs
 +++ b/Robust.Shared/GameObjects/Components/Light/OccluderComponent.cs
 @@ -20,6 +20,13 @@ public sealed partial class OccluderComponent : Component, IComponentTreeEntry<O
@@ -4854,7 +5147,7 @@ index b5d321f0d8..23c44d2531 100644
      /// Local-space convex polygon vertices.
      /// </summary>
 diff --git a/Robust.Shared/GameObjects/EntityEventBus.Common.cs b/Robust.Shared/GameObjects/EntityEventBus.Common.cs
-index b076d269bb..1d1026fa87 100644
+index b076d26..1d1026f 100644
 --- a/Robust.Shared/GameObjects/EntityEventBus.Common.cs
 +++ b/Robust.Shared/GameObjects/EntityEventBus.Common.cs
 @@ -1,4 +1,4 @@
@@ -4880,7 +5173,7 @@ index b076d269bb..1d1026fa87 100644
      }
  
 diff --git a/Robust.Shared/GameObjects/EntityEventBus.Directed.cs b/Robust.Shared/GameObjects/EntityEventBus.Directed.cs
-index c67178fc01..67737952d6 100644
+index c67178f..6773795 100644
 --- a/Robust.Shared/GameObjects/EntityEventBus.Directed.cs
 +++ b/Robust.Shared/GameObjects/EntityEventBus.Directed.cs
 @@ -199,7 +199,7 @@ namespace Robust.Shared.GameObjects
@@ -4902,7 +5195,7 @@ index c67178fc01..67737952d6 100644
              RaiseLocalEventCore(uid, ref unitRef, type, broadcast);
          }
 diff --git a/Robust.Shared/GameObjects/EntityEvents.cs b/Robust.Shared/GameObjects/EntityEvents.cs
-index 6e246f53a7..0e987992a6 100644
+index 6e246f5..0e98799 100644
 --- a/Robust.Shared/GameObjects/EntityEvents.cs
 +++ b/Robust.Shared/GameObjects/EntityEvents.cs
 @@ -51,7 +51,7 @@ namespace Robust.Shared.GameObjects
@@ -4915,7 +5208,7 @@ index 6e246f53a7..0e987992a6 100644
          public EntitySessionMessage(EntitySessionEventArgs eventArgs, T message)
          {
 diff --git a/Robust.Shared/GameObjects/EntityManager.ComponentDeltas.cs b/Robust.Shared/GameObjects/EntityManager.ComponentDeltas.cs
-index 08660cd8d6..c9561313ed 100644
+index 08660cd..c956131 100644
 --- a/Robust.Shared/GameObjects/EntityManager.ComponentDeltas.cs
 +++ b/Robust.Shared/GameObjects/EntityManager.ComponentDeltas.cs
 @@ -30,6 +30,12 @@ public abstract partial class EntityManager
@@ -4949,7 +5242,7 @@ index 08660cd8d6..c9561313ed 100644
      /// The last unclassified modification to this component.
      /// </summary>
 diff --git a/Robust.Shared/GameObjects/EntitySystemManager.cs b/Robust.Shared/GameObjects/EntitySystemManager.cs
-index 5e7a70ce68..f2b72225db 100644
+index 5e7a70c..f2b7222 100644
 --- a/Robust.Shared/GameObjects/EntitySystemManager.cs
 +++ b/Robust.Shared/GameObjects/EntitySystemManager.cs
 @@ -1,4 +1,4 @@
@@ -5153,10 +5446,18 @@ index 5e7a70ce68..f2b72225db 100644
  
          /// <inheritdoc />
 diff --git a/Robust.Shared/IoC/DependencyCollection.cs b/Robust.Shared/IoC/DependencyCollection.cs
-index 8e53bf386f..b345a52257 100644
+index 8e53bf3..0376646 100644
 --- a/Robust.Shared/IoC/DependencyCollection.cs
 +++ b/Robust.Shared/IoC/DependencyCollection.cs
-@@ -521,7 +521,11 @@ namespace Robust.Shared.IoC
+@@ -37,6 +37,7 @@ namespace Robust.Shared.IoC
+         // Temporary: cache of whether IHasDependencies is safe to use on a type.
+         // False for any types on which the source gen has failed to run.
+         private static readonly Dictionary<Type, bool> IsHasDependenciesSafe = new();
++        private static readonly Dictionary<Type, FieldInfo[]> DependencyFieldsCache = new();
+ 
+         /// <summary>
+         /// Dictionary that maps the types passed to <see cref="Resolve{T}()"/> to their implementation.
+@@ -521,7 +522,11 @@ namespace Robust.Shared.IoC
                      }
                      catch (TargetInvocationException e)
                      {
@@ -5169,7 +5470,7 @@ index 8e53bf386f..b345a52257 100644
                      }
                  }
  
-@@ -570,12 +574,26 @@ namespace Robust.Shared.IoC
+@@ -570,12 +575,26 @@ namespace Robust.Shared.IoC
                  // Graph built, go over ones that need injection.
                  foreach (var implementation in injectList)
                  {
@@ -5198,7 +5499,7 @@ index 8e53bf386f..b345a52257 100644
                  }
              }
          }
-@@ -650,21 +668,43 @@ namespace Robust.Shared.IoC
+@@ -650,21 +669,61 @@ namespace Robust.Shared.IoC
  
          private void InjectDependenciesReflection(object obj)
          {
@@ -5213,40 +5514,59 @@ index 8e53bf386f..b345a52257 100644
  
              var type = obj.GetType();
 -            foreach (var field in type.GetAllFields())
-+            for (var checkType = type; checkType != null; checkType = checkType.BaseType)
++            FieldInfo[]? dependencyFields;
++            lock (DependencyFieldsCache)
              {
 -                if (!Attribute.IsDefined(field, typeof(DependencyAttribute)))
-+                FieldInfo[] fields;
-+                try
-+                {
-+                    fields = checkType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-+                }
-+                catch (Exception ex)
++                if (!DependencyFieldsCache.TryGetValue(type, out dependencyFields))
                  {
-+                    System.Console.Error.WriteLine($"[MonoPort] GetFields failed on {checkType.FullName}: {ex.Message}");
-                     continue;
+-                    continue;
++                    var list = new List<FieldInfo>();
++                    for (var checkType = type; checkType != null; checkType = checkType.BaseType)
++                    {
++                        FieldInfo[] fields;
++                        try
++                        {
++                            fields = checkType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
++                        }
++                        catch (Exception ex)
++                        {
++                            System.Console.Error.WriteLine($"[MonoPort] GetFields failed on {checkType.FullName}: {ex.Message}");
++                            continue;
++                        }
++
++                        foreach (var field in fields)
++                        {
++                            try
++                            {
++                                if (Attribute.IsDefined(field, typeof(DependencyAttribute)))
++                                    list.Add(field);
++                            }
++                            catch { }
++                        }
++                    }
++
++                    dependencyFields = list.ToArray();
++                    DependencyFieldsCache[type] = dependencyFields;
                  }
++            }
  
 -                field.SetValue(obj, ResolveForInjection(type, field.FieldType, _services));
-+                foreach (var field in fields)
++            foreach (var field in dependencyFields)
++            {
++                try
 +                {
-+                    try
-+                    {
-+                        if (!Attribute.IsDefined(field, typeof(DependencyAttribute)))
-+                            continue;
-+
-+                        var val = ResolveForInjection(type, field.FieldType, _services);
-+                        field.SetValue(obj, val);
-+                    }
-+                    catch (Exception ex)
-+                    {
-+                        System.Console.Error.WriteLine($"[MonoPort] Field inject failed: {type.FullName}.{field.Name} (FieldType: {field.FieldType}): {ex.Message}");
-+                    }
++                    var val = ResolveForInjection(type, field.FieldType, _services);
++                    field.SetValue(obj, val);
++                }
++                catch (Exception ex)
++                {
++                    System.Console.Error.WriteLine($"[MonoPort] Field inject failed: {type.FullName}.{field.Name} (FieldType: {field.FieldType}): {ex.Message}");
 +                }
              }
          }
  
-@@ -705,6 +745,38 @@ namespace Robust.Shared.IoC
+@@ -705,6 +764,38 @@ namespace Robust.Shared.IoC
                  return default;
              }
  
@@ -5285,7 +5605,7 @@ index 8e53bf386f..b345a52257 100644
              var dynamicMethod = new DynamicMethod($"_injector<>{type}", null, InjectorParameters, type, true);
  
              dynamicMethod.DefineParameter(1, ParameterAttributes.In, "target");
-@@ -801,6 +873,9 @@ namespace Robust.Shared.IoC
+@@ -801,6 +892,9 @@ namespace Robust.Shared.IoC
  
          private static bool CalculateHasDependenciesSafe(Type type)
          {
@@ -5296,7 +5616,7 @@ index 8e53bf386f..b345a52257 100644
  
              lock (IsHasDependenciesSafe)
 diff --git a/Robust.Shared/IoC/IHasDependencies.cs b/Robust.Shared/IoC/IHasDependencies.cs
-index f0852e013a..c2d0b39eae 100644
+index f0852e0..c2d0b39 100644
 --- a/Robust.Shared/IoC/IHasDependencies.cs
 +++ b/Robust.Shared/IoC/IHasDependencies.cs
 @@ -1,4 +1,4 @@
@@ -5345,7 +5665,7 @@ index f0852e013a..c2d0b39eae 100644
  
  /// <summary>
 diff --git a/Robust.Shared/Localization/ILocalizationManager.cs b/Robust.Shared/Localization/ILocalizationManager.cs
-index 1c70a727cf..169752aba2 100644
+index 1c70a72..169752a 100644
 --- a/Robust.Shared/Localization/ILocalizationManager.cs
 +++ b/Robust.Shared/Localization/ILocalizationManager.cs
 @@ -131,6 +131,18 @@ namespace Robust.Shared.Localization
@@ -5368,7 +5688,7 @@ index 1c70a727cf..169752aba2 100644
          ///     Immediately reload ALL localizations from resources.
          /// </summary>
 diff --git a/Robust.Shared/Localization/LocalizationManager.cs b/Robust.Shared/Localization/LocalizationManager.cs
-index 69e28e8616..c6c10962aa 100644
+index 69e28e8..c6c1096 100644
 --- a/Robust.Shared/Localization/LocalizationManager.cs
 +++ b/Robust.Shared/Localization/LocalizationManager.cs
 @@ -429,14 +429,36 @@ namespace Robust.Shared.Localization
@@ -5410,7 +5730,7 @@ index 69e28e8616..c6c10962aa 100644
          {
              /*
 diff --git a/Robust.Shared/Log/ConsoleLogHandler.cs b/Robust.Shared/Log/ConsoleLogHandler.cs
-index 2633b8ec50..aca421a6fe 100644
+index 2633b8e..aca421a 100644
 --- a/Robust.Shared/Log/ConsoleLogHandler.cs
 +++ b/Robust.Shared/Log/ConsoleLogHandler.cs
 @@ -1,4 +1,4 @@
@@ -5442,7 +5762,7 @@ index 2633b8ec50..aca421a6fe 100644
                  {
                      // Fast path: if we can output as UTF-8, do it.
 diff --git a/Robust.Shared/Map/CoordinatesExtensions.cs b/Robust.Shared/Map/CoordinatesExtensions.cs
-index 38c8560efa..eb2975c892 100644
+index 38c8560..eb2975c 100644
 --- a/Robust.Shared/Map/CoordinatesExtensions.cs
 +++ b/Robust.Shared/Map/CoordinatesExtensions.cs
 @@ -8,6 +8,9 @@ namespace Robust.Shared.Map
@@ -5457,7 +5777,7 @@ index 38c8560efa..eb2975c892 100644
              IoCManager.Resolve(ref entityManager);
 diff --git a/Robust.Shared/Map/IMapManager.cs b/Robust.Shared/Map/IMapManager.cs
 new file mode 100644
-index 0000000000..724ee906b5
+index 0000000..724ee90
 --- /dev/null
 +++ b/Robust.Shared/Map/IMapManager.cs
 @@ -0,0 +1,132 @@
@@ -5594,7 +5914,7 @@ index 0000000000..724ee906b5
 +    }
 +}
 diff --git a/Robust.Shared/Map/TileDefinitionManager.cs b/Robust.Shared/Map/TileDefinitionManager.cs
-index 41989358ad..1772637ce8 100644
+index 4198935..1772637 100644
 --- a/Robust.Shared/Map/TileDefinitionManager.cs
 +++ b/Robust.Shared/Map/TileDefinitionManager.cs
 @@ -1,4 +1,4 @@
@@ -5634,7 +5954,7 @@ index 41989358ad..1772637ce8 100644
                  definition = null;
                  return false;
 diff --git a/Robust.Shared/Native/Libc.cs b/Robust.Shared/Native/Libc.cs
-index 06be04d55c..e29fe66638 100644
+index 06be04d..e29fe66 100644
 --- a/Robust.Shared/Native/Libc.cs
 +++ b/Robust.Shared/Native/Libc.cs
 @@ -1,4 +1,4 @@
@@ -5652,7 +5972,7 @@ index 06be04d55c..e29fe66638 100644
      public static extern IntPtr dlopen([MarshalAs(UnmanagedType.LPUTF8Str)] string name, int flags);
  }
 diff --git a/Robust.Shared/Network/AuthManager.cs b/Robust.Shared/Network/AuthManager.cs
-index ea2250e891..a86a98eb11 100644
+index ea2250e..a86a98e 100644
 --- a/Robust.Shared/Network/AuthManager.cs
 +++ b/Robust.Shared/Network/AuthManager.cs
 @@ -1,4 +1,4 @@
@@ -5671,7 +5991,7 @@ index ea2250e891..a86a98eb11 100644
          NetUserId? UserId { get; set; }
          string? Server { get; set; }
 diff --git a/Robust.Shared/Network/NetManager.ClientConnect.cs b/Robust.Shared/Network/NetManager.ClientConnect.cs
-index 509322be62..c1614abbb1 100644
+index 509322b..c1614ab 100644
 --- a/Robust.Shared/Network/NetManager.ClientConnect.cs
 +++ b/Robust.Shared/Network/NetManager.ClientConnect.cs
 @@ -105,6 +105,7 @@ namespace Robust.Shared.Network
@@ -5715,7 +6035,7 @@ index 509322be62..c1614abbb1 100644
                  request.Headers.Authorization = new AuthenticationHeaderValue("SS14Auth", authToken);
                  var joinResp = await _http.Client.SendAsync(request, cancel);
 diff --git a/Robust.Shared/Network/NetManager.cs b/Robust.Shared/Network/NetManager.cs
-index b79a8d0ef2..c12b5a316a 100644
+index b79a8d0..c12b5a3 100644
 --- a/Robust.Shared/Network/NetManager.cs
 +++ b/Robust.Shared/Network/NetManager.cs
 @@ -1140,15 +1140,17 @@ namespace Robust.Shared.Network
@@ -5741,7 +6061,7 @@ index b79a8d0ef2..c12b5a316a 100644
                  return true;
              }
 diff --git a/Robust.Shared/ProgramShared.cs b/Robust.Shared/ProgramShared.cs
-index a75bfa08bc..2c8479afcd 100644
+index a75bfa0..2c8479a 100644
 --- a/Robust.Shared/ProgramShared.cs
 +++ b/Robust.Shared/ProgramShared.cs
 @@ -29,27 +29,33 @@ internal static class ProgramShared
@@ -5831,7 +6151,7 @@ index a75bfa08bc..2c8479afcd 100644
  #endif
  
 diff --git a/Robust.Shared/Prototypes/PrototypeManager.cs b/Robust.Shared/Prototypes/PrototypeManager.cs
-index 64d2669e75..85738a9360 100644
+index 64d2669..85738a9 100644
 --- a/Robust.Shared/Prototypes/PrototypeManager.cs
 +++ b/Robust.Shared/Prototypes/PrototypeManager.cs
 @@ -251,14 +251,24 @@ namespace Robust.Shared.Prototypes
@@ -6314,7 +6634,7 @@ index 64d2669e75..85738a9360 100644
  
  
 diff --git a/Robust.Shared/Reflection/ReflectionManager.cs b/Robust.Shared/Reflection/ReflectionManager.cs
-index 0d7fedf565..429a4554a4 100644
+index 0d7fedf..429a455 100644
 --- a/Robust.Shared/Reflection/ReflectionManager.cs
 +++ b/Robust.Shared/Reflection/ReflectionManager.cs
 @@ -76,7 +76,18 @@ namespace Robust.Shared.Reflection
@@ -6394,7 +6714,7 @@ index 0d7fedf565..429a4554a4 100644
                              r != _reverseEnumCache[e])
                          {
 diff --git a/Robust.Shared/Serialization/ISerializationGenerated.cs b/Robust.Shared/Serialization/ISerializationGenerated.cs
-index 7cb0fd3d22..e90de90616 100644
+index 7cb0fd3..e90de90 100644
 --- a/Robust.Shared/Serialization/ISerializationGenerated.cs
 +++ b/Robust.Shared/Serialization/ISerializationGenerated.cs
 @@ -1,4 +1,4 @@
@@ -6432,7 +6752,7 @@ index 7cb0fd3d22..e90de90616 100644
      static virtual void Read(
 diff --git a/Robust.Shared/Serialization/Manager/Attributes/ValidatePrototypeIdAttribute.cs b/Robust.Shared/Serialization/Manager/Attributes/ValidatePrototypeIdAttribute.cs
 new file mode 100644
-index 0000000000..fb175147c8
+index 0000000..fb17514
 --- /dev/null
 +++ b/Robust.Shared/Serialization/Manager/Attributes/ValidatePrototypeIdAttribute.cs
 @@ -0,0 +1,14 @@
@@ -6451,7 +6771,7 @@ index 0000000000..fb175147c8
 +{
 +}
 diff --git a/Robust.Shared/Serialization/Manager/SerializationManager.Instantiation.cs b/Robust.Shared/Serialization/Manager/SerializationManager.Instantiation.cs
-index eeefefe85a..d8d584c926 100644
+index eeefefe..d8d584c 100644
 --- a/Robust.Shared/Serialization/Manager/SerializationManager.Instantiation.cs
 +++ b/Robust.Shared/Serialization/Manager/SerializationManager.Instantiation.cs
 @@ -1,4 +1,4 @@
@@ -6531,7 +6851,7 @@ index eeefefe85a..d8d584c926 100644
      }
  }
 diff --git a/Robust.Shared/Serialization/Manager/SerializationManager.Reading.cs b/Robust.Shared/Serialization/Manager/SerializationManager.Reading.cs
-index b2b5d27b9f..fece0b8041 100644
+index b2b5d27..fece0b8 100644
 --- a/Robust.Shared/Serialization/Manager/SerializationManager.Reading.cs
 +++ b/Robust.Shared/Serialization/Manager/SerializationManager.Reading.cs
 @@ -1,4 +1,4 @@
@@ -6579,7 +6899,7 @@ index b2b5d27b9f..fece0b8041 100644
              var instance = instanceProvider();
  
 diff --git a/Robust.Shared/Serialization/Manager/SerializationManager.cs b/Robust.Shared/Serialization/Manager/SerializationManager.cs
-index 151805d557..21989961c7 100644
+index 151805d..680038d 100644
 --- a/Robust.Shared/Serialization/Manager/SerializationManager.cs
 +++ b/Robust.Shared/Serialization/Manager/SerializationManager.cs
 @@ -33,6 +33,7 @@ namespace Robust.Shared.Serialization.Manager
@@ -6602,7 +6922,8 @@ index 151805d557..21989961c7 100644
              {
 -                var meansDef = false;
 -                foreach (var meansAttr in meansDataDef)
--                {
++                try
+                 {
 -                    if (!_reflectionManager.IsAttributeDefined(type, meansAttr))
 -                        continue;
 -
@@ -6618,8 +6939,7 @@ index 151805d557..21989961c7 100644
 -                    records[type] = 0;
 -                }
 -                else
-+                try
-                 {
+-                {
 -                    var meansRecord = false;
 -                    foreach (var meansAttr in meansDataRecord)
 +                    var meansDef = false;
@@ -6716,7 +7036,7 @@ index 151805d557..21989961c7 100644
              });
  
              var duplicateErrors = new StringBuilder();
-@@ -279,14 +299,40 @@ namespace Robust.Shared.Serialization.Manager
+@@ -279,14 +299,33 @@ namespace Robust.Shared.Serialization.Manager
              return true;
          }
  
@@ -6735,13 +7055,6 @@ index 151805d557..21989961c7 100644
 +                if (!t.IsAssignableTo(genType))
 +                {
 +                    (sawmill ?? _sawmill)?.Debug($"Skipping DataDefinition for {t} because it does not implement {genType}");
-+                    return null;
-+                }
-+
-+                var getFieldDefs = t.GetMethod("GetFieldDefinitions", BindingFlags.Public | BindingFlags.Static);
-+                if (getFieldDefs == null)
-+                {
-+                    (sawmill ?? _sawmill)?.Debug($"Skipping DataDefinition for {t} because it lacks serv5 static methods");
 +                    return null;
 +                }
 +
@@ -6765,7 +7078,7 @@ index 151805d557..21989961c7 100644
  
          public void Shutdown()
 diff --git a/Robust.Shared/Serialization/RobustMappedStringSerializer.cs b/Robust.Shared/Serialization/RobustMappedStringSerializer.cs
-index ead07fe952..841047f8d2 100644
+index ead07fe..841047f 100644
 --- a/Robust.Shared/Serialization/RobustMappedStringSerializer.cs
 +++ b/Robust.Shared/Serialization/RobustMappedStringSerializer.cs
 @@ -482,7 +482,14 @@ namespace Robust.Shared.Serialization
@@ -6816,7 +7129,7 @@ index ead07fe952..841047f8d2 100644
  
          /// <summary>
 diff --git a/Robust.Shared/Serialization/TypeSerializers/Implementations/ComponentRegistrySerializer.cs b/Robust.Shared/Serialization/TypeSerializers/Implementations/ComponentRegistrySerializer.cs
-index 4f71d0d07a..ff044107ae 100644
+index 4f71d0d..3f06e31 100644
 --- a/Robust.Shared/Serialization/TypeSerializers/Implementations/ComponentRegistrySerializer.cs
 +++ b/Robust.Shared/Serialization/TypeSerializers/Implementations/ComponentRegistrySerializer.cs
 @@ -82,35 +82,42 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
@@ -6886,8 +7199,57 @@ index 4f71d0d07a..ff044107ae 100644
              }
  
              return components;
+@@ -287,6 +294,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
+             SerializationHookContext hookCtx,
+             ISerializationContext? context)
+         {
++            if (type.Name == "IconSmoothComponent")
++            {
++                AdaptIconSmoothMapping(mapping);
++            }
++
+             var comp = (Component) inst._dynamicTypeFactoryInternal.CreateInstanceUnchecked(type, inject: false);
+ #pragma warning disable CS0618 // Type or member is obsolete
+             comp = comp.Instantiate();
+@@ -296,6 +308,36 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
+             return comp;
+         }
+ 
++        private static void AdaptIconSmoothMapping(MappingDataNode mapping)
++        {
++            if (!mapping.Has("base"))
++            {
++                if (mapping.TryGet("states", out var statesNode))
++                {
++                    if (statesNode is MappingDataNode statesMap && statesMap.TryGet("base", out var baseNode))
++                    {
++                        mapping.Add("base", baseNode);
++                    }
++                    else if (statesNode is SequenceDataNode statesSeq)
++                    {
++                        foreach (var item in statesSeq)
++                        {
++                            if (item is MappingDataNode itemMap && itemMap.TryGet("base", out var bNode))
++                            {
++                                mapping.Add("base", bNode);
++                                break;
++                            }
++                        }
++                    }
++                }
++
++                if (!mapping.Has("base") && !mapping.Has("mode"))
++                {
++                    mapping.Add("mode", new ValueDataNode("NoSprite"));
++                }
++            }
++        }
++
+         void IPostInjectInit.PostInject()
+         {
+             _dynamicTypeFactoryInternal = (IDynamicTypeFactoryInternal) _dynamicTypeFactory;
 diff --git a/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/Array/PrototypeIdArraySerializer.cs b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/Array/PrototypeIdArraySerializer.cs
-index 0e8e9e2867..0c30140df8 100644
+index 0e8e9e2..0c30140 100644
 --- a/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/Array/PrototypeIdArraySerializer.cs
 +++ b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/Array/PrototypeIdArraySerializer.cs
 @@ -28,3 +28,21 @@ public sealed class AbstractPrototypeIdArraySerializer<TPrototype> : ITypeValida
@@ -6914,7 +7276,7 @@ index 0e8e9e2867..0c30140df8 100644
 +
 diff --git a/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/Dictionary/PrototypeIdDictionarySerializer.cs b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/Dictionary/PrototypeIdDictionarySerializer.cs
 new file mode 100644
-index 0000000000..8faab13051
+index 0000000..8faab13
 --- /dev/null
 +++ b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/Dictionary/PrototypeIdDictionarySerializer.cs
 @@ -0,0 +1,55 @@
@@ -6975,7 +7337,7 @@ index 0000000000..8faab13051
 +}
 diff --git a/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/Dictionary/PrototypeIdValueDictionarySerializer.cs b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/Dictionary/PrototypeIdValueDictionarySerializer.cs
 new file mode 100644
-index 0000000000..860d875cf7
+index 0000000..860d875
 --- /dev/null
 +++ b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/Dictionary/PrototypeIdValueDictionarySerializer.cs
 @@ -0,0 +1,61 @@
@@ -7042,7 +7404,7 @@ index 0000000000..860d875cf7
 +}
 diff --git a/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/List/PrototypeIdListSerializer.cs b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/List/PrototypeIdListSerializer.cs
 new file mode 100644
-index 0000000000..81020ff5ba
+index 0000000..81020ff
 --- /dev/null
 +++ b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/List/PrototypeIdListSerializer.cs
 @@ -0,0 +1,65 @@
@@ -7113,7 +7475,7 @@ index 0000000000..81020ff5ba
 +}
 diff --git a/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/PrototypeFlagsTypeSerializer.cs b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/PrototypeFlagsTypeSerializer.cs
 new file mode 100644
-index 0000000000..4039e79b70
+index 0000000..4039e79
 --- /dev/null
 +++ b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/PrototypeFlagsTypeSerializer.cs
 @@ -0,0 +1,107 @@
@@ -7226,7 +7588,7 @@ index 0000000000..4039e79b70
 +}
 diff --git a/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/PrototypeIdSerializer.cs b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/PrototypeIdSerializer.cs
 new file mode 100644
-index 0000000000..2369d80064
+index 0000000..2369d80
 --- /dev/null
 +++ b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/PrototypeIdSerializer.cs
 @@ -0,0 +1,37 @@
@@ -7269,7 +7631,7 @@ index 0000000000..2369d80064
 +}
 diff --git a/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/Set/PrototypeIdHashSetSerializer.cs b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/Set/PrototypeIdHashSetSerializer.cs
 new file mode 100644
-index 0000000000..7f5030aea0
+index 0000000..7f5030a
 --- /dev/null
 +++ b/Robust.Shared/Serialization/TypeSerializers/Implementations/Custom/Prototype/Set/PrototypeIdHashSetSerializer.cs
 @@ -0,0 +1,41 @@
@@ -7315,7 +7677,7 @@ index 0000000000..7f5030aea0
 +    }
 +}
 diff --git a/Robust.Shared/SharedIoC.cs b/Robust.Shared/SharedIoC.cs
-index d743f5bda4..a13d2030a0 100644
+index d743f5b..a13d203 100644
 --- a/Robust.Shared/SharedIoC.cs
 +++ b/Robust.Shared/SharedIoC.cs
 @@ -43,6 +43,7 @@ namespace Robust.Shared
@@ -7327,7 +7689,7 @@ index d743f5bda4..a13d2030a0 100644
              deps.Register<IParallelManager, ParallelManager>();
              deps.Register<IParallelManagerInternal, ParallelManager>();
 diff --git a/Robust.Shared/Timing/PrecisionSleep.cs b/Robust.Shared/Timing/PrecisionSleep.cs
-index 328e021cde..13a9d2f1e5 100644
+index 328e021..13a9d2f 100644
 --- a/Robust.Shared/Timing/PrecisionSleep.cs
 +++ b/Robust.Shared/Timing/PrecisionSleep.cs
 @@ -1,4 +1,4 @@
@@ -7346,7 +7708,7 @@ index 328e021cde..13a9d2f1e5 100644
  
      private struct timespec
 diff --git a/Robust.Shared/Utility/ResPath.cs b/Robust.Shared/Utility/ResPath.cs
-index 1dc2126f07..f761352c4e 100644
+index 1dc2126..f761352 100644
 --- a/Robust.Shared/Utility/ResPath.cs
 +++ b/Robust.Shared/Utility/ResPath.cs
 @@ -1,4 +1,4 @@
@@ -7387,7 +7749,7 @@ index 1dc2126f07..f761352c4e 100644
  
      #endregion
 diff --git a/Robust.Shared/Utility/TypeHelpers.cs b/Robust.Shared/Utility/TypeHelpers.cs
-index 8831e60fa9..2b328737c4 100644
+index 8831e60..2b32873 100644
 --- a/Robust.Shared/Utility/TypeHelpers.cs
 +++ b/Robust.Shared/Utility/TypeHelpers.cs
 @@ -183,23 +183,53 @@ namespace Robust.Shared.Utility
