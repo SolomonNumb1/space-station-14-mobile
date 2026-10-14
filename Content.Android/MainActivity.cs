@@ -480,7 +480,7 @@ namespace Content.Android
 
                 try
                 {
-                    System.Environment.SetEnvironmentVariable("MONO_GC_PARAMS", "major=marksweep-conc,nursery-size=32m,soft-heap-limit=512m");
+                    System.Environment.SetEnvironmentVariable("MONO_GC_PARAMS", "major=marksweep-conc,nursery-size=8m");
                 }
                 catch { }
 
@@ -547,7 +547,7 @@ namespace Content.Android
         {
             try
             {
-                System.Environment.SetEnvironmentVariable("MONO_GC_PARAMS", "major=marksweep-conc,nursery-size=32m,soft-heap-limit=512m");
+                System.Environment.SetEnvironmentVariable("MONO_GC_PARAMS", "major=marksweep-conc,nursery-size=8m");
             }
             catch { }
 
@@ -638,12 +638,6 @@ namespace Content.Android
             if (Instance == this)
                 Instance = null;
             base.OnDestroy();
-
-            try
-            {
-                global::Android.OS.Process.KillProcess(global::Android.OS.Process.MyPid());
-            }
-            catch {}
         }
 
 
@@ -822,98 +816,107 @@ namespace Content.Android
 
         private sealed class AndroidLogcatWriter : TextWriter
         {
+            private readonly object _lock = new();
             private readonly System.Text.StringBuilder _sb = new();
             private readonly string _tag;
             private readonly string? _filePath;
-            private readonly System.Collections.Concurrent.ConcurrentQueue<string> _queue = new();
-            private readonly System.Threading.CancellationTokenSource _cts = new();
+            private StreamWriter? _writer;
             private long _fileLength;
 
             public AndroidLogcatWriter(string tag, string? filePath = null)
             {
                 _tag = tag;
                 _filePath = filePath;
-                if (!string.IsNullOrEmpty(_filePath))
-                {
-                    try
-                    {
-                        var fi = new FileInfo(_filePath);
-                        if (fi.Exists)
-                        {
-                            if (fi.Length > 2 * 1024 * 1024)
-                                fi.Delete();
-                            else
-                                _fileLength = fi.Length;
-                        }
-                    }
-                    catch {}
-
-                    var thread = new System.Threading.Thread(WorkerLoop)
-                    {
-                        IsBackground = true,
-                        Priority = System.Threading.ThreadPriority.BelowNormal,
-                        Name = "SS14-LogWriter"
-                    };
-                    thread.Start();
-                }
+                InitWriter();
             }
 
-            private void WorkerLoop()
+            private void InitWriter()
             {
+                if (string.IsNullOrEmpty(_filePath))
+                    return;
+
                 try
                 {
-                    using var file = File.Open(_filePath!, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
-                    using var writer = new StreamWriter(file, System.Text.Encoding.UTF8, 8192);
-                    while (!_cts.Token.IsCancellationRequested)
+                    var fi = new FileInfo(_filePath);
+                    if (fi.Exists && fi.Length > 2 * 1024 * 1024)
                     {
-                        bool wrote = false;
-                        while (_queue.TryDequeue(out var line))
-                        {
-                            writer.WriteLine(line);
-                            _fileLength += line.Length + 1;
-                            wrote = true;
-                            if (_fileLength > 2 * 1024 * 1024)
-                            {
-                                writer.Flush();
-                                file.SetLength(0);
-                                _fileLength = 0;
-                            }
-                        }
-                        if (wrote)
-                        {
-                            writer.Flush();
-                        }
-                        System.Threading.Thread.Sleep(250);
+                        fi.Delete();
                     }
+                    _writer = new StreamWriter(File.Open(_filePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite)) { AutoFlush = true };
+                    _fileLength = 0;
                 }
-                catch {}
+                catch { }
             }
 
             public override System.Text.Encoding Encoding => System.Text.Encoding.UTF8;
 
             public override void Write(char value)
             {
-                if (value == '\n')
+                lock (_lock)
                 {
-                    var line = _sb.ToString();
-                    _sb.Clear();
-                    global::Android.Util.Log.Info(_tag, line);
-                    if (!string.IsNullOrEmpty(_filePath))
+                    if (value == '\n')
                     {
-                        _queue.Enqueue(line);
+                        var line = _sb.ToString();
+                        _sb.Clear();
+                        global::Android.Util.Log.Info(_tag, line);
+                        if (_writer != null)
+                        {
+                            try
+                            {
+                                _writer.WriteLine(line);
+                                _fileLength += line.Length + 1;
+                                if (_fileLength > 2 * 1024 * 1024)
+                                {
+                                    _writer.Dispose();
+                                    InitWriter();
+                                }
+                            }
+                            catch { }
+                        }
                     }
-                }
-                else if (value != '\r')
-                {
-                    _sb.Append(value);
+                    else if (value != '\r')
+                    {
+                        _sb.Append(value);
+                    }
                 }
             }
 
             public override void Write(string? value)
             {
-                if (value == null) return;
-                foreach (var c in value)
-                    Write(c);
+                if (value == null)
+                    return;
+
+                lock (_lock)
+                {
+                    for (int i = 0; i < value.Length; i++)
+                    {
+                        var c = value[i];
+                        if (c == '\n')
+                        {
+                            var line = _sb.ToString();
+                            _sb.Clear();
+                            global::Android.Util.Log.Info(_tag, line);
+                            if (_writer != null)
+                            {
+                                try
+                                {
+                                    _writer.WriteLine(line);
+                                    _fileLength += line.Length + 1;
+                                    if (_fileLength > 2 * 1024 * 1024)
+                                    {
+                                        _writer.Dispose();
+                                        InitWriter();
+                                    }
+                                }
+                                catch { }
+                            }
+                        }
+                        else if (c != '\r')
+                        {
+                            _sb.Append(c);
+                        }
+                    }
+                }
             }
         }
 
@@ -1069,11 +1072,6 @@ namespace Content.Android
                 global::Android.Util.Log.Info("SS14Launch", $"[Main] Starting GameController: contentStart={contentStart}, hasZip={hasZip}, mountZip={mountZip}, connectAddr={connectAddr}, user={username}");
 
                 startMethod.Invoke(null, new object?[] { args.ToArray(), options, contentStart, null });
-                global::Android.Util.Log.Info("SS14Launch", "[Main] GameController finished, finishing activity.");
-                Instance?.RunOnUiThread(() =>
-                {
-                    try { Instance?.Finish(); } catch {}
-                });
             }
 
             catch (Exception ex)

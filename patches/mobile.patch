@@ -1,9 +1,10 @@
 diff --git a/Lidgren.Network/Lidgren.Network b/Lidgren.Network/Lidgren.Network
+index f7ecb5a..a22f2a9 160000
 --- a/Lidgren.Network/Lidgren.Network
 +++ b/Lidgren.Network/Lidgren.Network
 @@ -1 +1 @@
 -Subproject commit f7ecb5aa384013d920f7925340cc4608ed156e83
-+Subproject commit f7ecb5aa384013d920f7925340cc4608ed156e83-dirty
++Subproject commit a22f2a9888d35e2bdfb0f3c247a5f1dc9bc67a1d
 diff --git a/MSBuild/Robust.DefineConstants.targets b/MSBuild/Robust.DefineConstants.targets
 index f67e982..46cb749 100644
 --- a/MSBuild/Robust.DefineConstants.targets
@@ -2284,10 +2285,10 @@ index 29c54bc..a21a747 100644
  
 diff --git a/Robust.Client/UserInterface/Mobile/MobileControlsOverlay.cs b/Robust.Client/UserInterface/Mobile/MobileControlsOverlay.cs
 new file mode 100644
-index 0000000..9f2ea62
+index 0000000..8bc0ad6
 --- /dev/null
 +++ b/Robust.Client/UserInterface/Mobile/MobileControlsOverlay.cs
-@@ -0,0 +1,1259 @@
+@@ -0,0 +1,1144 @@
 +using System;
 +using System.Collections.Generic;
 +using System.Globalization;
@@ -2375,10 +2376,6 @@ index 0000000..9f2ea62
 +    private readonly PojavActionButton _throwButton;
 +
 +    private readonly Dictionary<long, Control> _claimedTouches = new();
-+    private readonly Dictionary<long, Vector2> _freeTouches = new();
-+    private float _pinchLastDistance = 0f;
-+    private float _pinchAccumDelta = 0f;
-+    private bool _wasPinching = false;
 +
 +
 +
@@ -3012,19 +3009,6 @@ index 0000000..9f2ea62
 +                    }
 +                }
 +
-+                // If not claimed by buttons or stick, track as free touch for pinch-to-zoom
-+                _freeTouches[args.FingerId] = args.Coordinates.Position;
-+                if (_freeTouches.Count >= 2)
-+                {
-+                    var p1 = GetPinchTouchPos(0);
-+                    var p2 = GetPinchTouchPos(1);
-+                    _pinchLastDistance = Vector2.Distance(p1, p2);
-+                    _pinchAccumDelta = 0f;
-+                    _wasPinching = true;
-+                    return true;
-+
-+                }
-+
 +                return false;
 +            }
 +
@@ -3038,38 +3022,6 @@ index 0000000..9f2ea62
 +                        stick.OnTouchMove(args.FingerId, stickPos);
 +                    }
 +                    return true;
-+                }
-+
-+                if (_freeTouches.ContainsKey(args.FingerId))
-+                {
-+                    _freeTouches[args.FingerId] = args.Coordinates.Position;
-+                    if (_freeTouches.Count >= 2)
-+                    {
-+                        var p1 = GetPinchTouchPos(0);
-+                        var p2 = GetPinchTouchPos(1);
-+                        var currentDist = Vector2.Distance(p1, p2);
-+                        var delta = currentDist - _pinchLastDistance;
-+                        _pinchLastDistance = currentDist;
-+                        _pinchAccumDelta += delta;
-+                        _wasPinching = true;
-+
-+                        var scale = UIScale > 0 ? UIScale : 1f;
-+                        var threshold = 45f * scale;
-+                        var midpoint = (p1 + p2) * 0.5f;
-+
-+                        while (_pinchAccumDelta >= threshold)
-+                        {
-+                            _pinchAccumDelta -= threshold;
-+                            TriggerPinchZoom(midpoint, zoomIn: true);
-+                        }
-+                        while (_pinchAccumDelta <= -threshold)
-+                        {
-+                            _pinchAccumDelta += threshold;
-+                            TriggerPinchZoom(midpoint, zoomIn: false);
-+                        }
-+
-+                        return true;
-+                    }
 +                }
 +
 +                return false;
@@ -3091,77 +3043,11 @@ index 0000000..9f2ea62
 +                    return true;
 +                }
 +
-+                if (_freeTouches.Remove(args.FingerId))
-+                {
-+                    if (_freeTouches.Count < 2)
-+                    {
-+                        _pinchAccumDelta = 0f;
-+                    }
-+
-+                    if (_wasPinching)
-+                    {
-+                        if (_freeTouches.Count == 0)
-+                            _wasPinching = false;
-+                        return true;
-+                    }
-+                }
-+
-+
 +                return false;
 +            }
 +        }
 +
 +        return false;
-+    }
-+
-+    private Vector2 GetPinchTouchPos(int index)
-+    {
-+        int i = 0;
-+        foreach (var val in _freeTouches.Values)
-+        {
-+            if (i == index)
-+                return val;
-+            i++;
-+        }
-+        return Vector2.Zero;
-+    }
-+
-+    private IViewportControl? FindViewportControl(Control parent)
-+    {
-+        if (parent is IViewportControl vp)
-+            return vp;
-+
-+        for (int i = 0; i < parent.ChildCount; i++)
-+        {
-+            var child = parent.GetChild(i);
-+            var res = FindViewportControl(child);
-+            if (res != null)
-+                return res;
-+        }
-+
-+        return null;
-+    }
-+
-+    private void TriggerPinchZoom(Vector2 midpoint, bool zoomIn)
-+    {
-+        var delta = zoomIn ? new Vector2(0, 1) : new Vector2(0, -1);
-+        var windowId = _clyde.MainWindow?.Id ?? default;
-+        var screenCoords = new ScreenCoordinates(midpoint, windowId);
-+        var mouseWheelArgs = new MouseWheelEventArgs(delta, screenCoords);
-+        _uiMgr.MouseWheel(mouseWheelArgs);
-+
-+        if (!mouseWheelArgs.Handled && _uiMgr.ActiveScreen != null)
-+        {
-+            var vp = FindViewportControl(_uiMgr.ActiveScreen);
-+            if (vp is Control vpControl)
-+            {
-+                var guiArgs = new GUIMouseWheelEventArgs(delta, vpControl,
-+                    midpoint / vpControl.UIScale, screenCoords,
-+                    midpoint / vpControl.UIScale - vpControl.GlobalPosition,
-+                    midpoint - vpControl.GlobalPixelPosition);
-+                vpControl.MouseWheel(guiArgs);
-+            }
-+        }
 +    }
 +
 +
