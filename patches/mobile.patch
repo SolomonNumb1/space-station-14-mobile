@@ -1980,6 +1980,200 @@ index 0000000..c139d8f
 +        Coordinates = coordinates;
 +    }
 +}
+diff --git a/Robust.Client/Map/ClydeTileDefinitionManager.cs b/Robust.Client/Map/ClydeTileDefinitionManager.cs
+index 2199b86..43f96c7 100644
+--- a/Robust.Client/Map/ClydeTileDefinitionManager.cs
++++ b/Robust.Client/Map/ClydeTileDefinitionManager.cs
+@@ -116,23 +116,34 @@ namespace Robust.Client.Map
+             var w = (float)sheet.Width;
+             var h = (float)sheet.Height;
+ 
+-            // Add in the missing tile texture sprite as tile texture 0.
++            Image<Rgba32> errorImage;
++            if (_manager.TryContentFileRead("/Textures/noTile.png", out var errStream))
+             {
+-                ErrorTileRegion = Box2.FromDimensions(
+-                    0, (h - EyeManager.PixelsPerMeter) / h,
+-                    tileSize / w, tileSize / h);
+-                Image<Rgba32> image;
+-                using (var stream = _manager.ContentFileRead("/Textures/noTile.png"))
++                using (errStream)
+                 {
+-                    image = Image.Load<Rgba32>(stream);
++                    errorImage = Image.Load<Rgba32>(errStream);
++                }
++            }
++            else
++            {
++                errorImage = new Image<Rgba32>(tileSize, tileSize);
++                for (var y = 0; y < tileSize; y++)
++                {
++                    for (var x = 0; x < tileSize; x++)
++                    {
++                        errorImage[x, y] = ((x / 8) + (y / 8)) % 2 == 0 ? new Rgba32(255, 0, 255, 255) : new Rgba32(0, 0, 0, 255);
++                    }
+                 }
+-
+-                image.Blit(new UIBox2i(0, 0, tileSize, tileSize), sheet, Vector2i.Zero);
+             }
+ 
++            ErrorTileRegion = Box2.FromDimensions(
++                0, (h - EyeManager.PixelsPerMeter) / h,
++                tileSize / w, tileSize / h);
++
++            errorImage.Blit(new UIBox2i(0, 0, tileSize, tileSize), sheet, Vector2i.Zero);
++
+             if (imgWidth >= 2048 || imgHeight >= 2048)
+             {
+-                // Sanity warning, some machines don't have textures larger than this and need multiple atlases.
+                 _sawmill.Warning($"Tile texture atlas is ({imgWidth} x {imgHeight}), larger than 2048 x 2048. If you really need {tileCount} tiles, file an issue on RobustToolbox.");
+             }
+ 
+@@ -141,19 +152,42 @@ namespace Robust.Client.Map
+ 
+             foreach (var def in defList)
+             {
+-                Image<Rgba32> image;
+-                // Already know it's not null above
+                 var path = def.Sprite!.Value;
++                Image<Rgba32>? image = null;
+ 
+-                using (var stream = _manager.ContentFileRead(path))
++                if (_manager.TryContentFileRead(path, out var stream))
++                {
++                    try
++                    {
++                        using (stream)
++                        {
++                            image = Image.Load<Rgba32>(stream);
++                        }
++                    }
++                    catch (Exception e)
++                    {
++                        _sawmill.Error($"Failed to decode tile texture '{path}' for '{def.ID}': {e.Message}");
++                        image = null;
++                    }
++                }
++                else
+                 {
+-                    image = Image.Load<Rgba32>(stream);
++                    _sawmill.Error($"Tile '{def.ID}' references texture '{path}', but it does not exist in VFS! Using fallback.");
+                 }
+ 
+-                if (image.Width != (tileSize * def.Variants) || image.Height != tileSize)
++                if (image == null || image.Width != (tileSize * def.Variants) || image.Height != tileSize)
+                 {
+-                    throw new NotSupportedException(
+-                        $"Unable to load {path}, due to being unable to use tile texture with a dimension other than {tileSize}x({tileSize} * Variants).");
++                    if (image != null)
++                    {
++                        _sawmill.Error($"Tile '{def.ID}' texture '{path}' has invalid dimensions {image.Width}x{image.Height}, expected {tileSize * def.Variants}x{tileSize}! Using fallback.");
++                        image.Dispose();
++                    }
++
++                    image = new Image<Rgba32>(tileSize * def.Variants, tileSize);
++                    for (var v = 0; v < def.Variants; v++)
++                    {
++                        errorImage.Blit(new UIBox2i(0, 0, tileSize, tileSize), image, new Vector2i(v * tileSize, 0));
++                    }
+                 }
+ 
+                 var regionList = new Box2[def.Variants];
+@@ -171,9 +205,10 @@ namespace Robust.Client.Map
+                     BumpColumn(ref row, ref column, dimensionX);
+                 }
+ 
++                image.Dispose();
++
+                 tileRegs.Add((def.TileId, Direction.Invalid), regionList);
+ 
+-                // Edges
+                 if (def.EdgeSprites.Count <= 0)
+                     continue;
+ 
+@@ -182,22 +217,41 @@ namespace Robust.Client.Map
+                     if (!def.EdgeSprites.TryGetValue(direction, out var edge))
+                         continue;
+ 
+-                    using (var stream = _manager.ContentFileRead(edge))
++                    Image<Rgba32>? edgeImage = null;
++                    if (_manager.TryContentFileRead(edge, out var edgeStream))
+                     {
+-                        image = Image.Load<Rgba32>(stream);
++                        try
++                        {
++                            using (edgeStream)
++                            {
++                                edgeImage = Image.Load<Rgba32>(edgeStream);
++                            }
++                        }
++                        catch (Exception e)
++                        {
++                            _sawmill.Error($"Failed to decode tile edge texture '{edge}' for '{def.ID}': {e.Message}");
++                            edgeImage = null;
++                        }
+                     }
++                    else
++                    {
++                        _sawmill.Warning($"Tile '{def.ID}' edge texture '{edge}' does not exist in VFS! Skipping.");
++                    }
++
++                    if (edgeImage == null)
++                        continue;
+ 
+-                    if (image.Width != tileSize || image.Height != tileSize)
++                    if (edgeImage.Width != tileSize || edgeImage.Height != tileSize)
+                     {
+-                        throw new NotSupportedException(
+-                            $"Unable to load {path}, due to being unable to use tile textures with a dimension other than {tileSize}x{tileSize}.");
++                        _sawmill.Warning($"Tile '{def.ID}' edge texture '{edge}' has invalid dimensions {edgeImage.Width}x{edgeImage.Height}, expected {tileSize}x{tileSize}! Skipping.");
++                        edgeImage.Dispose();
++                        continue;
+                     }
+ 
+                     Angle angle = Angle.Zero;
+ 
+                     switch (direction)
+                     {
+-                        // Corner sprites
+                         case Direction.SouthEast:
+                             break;
+                         case Direction.NorthEast:
+@@ -209,7 +263,6 @@ namespace Robust.Client.Map
+                         case Direction.SouthWest:
+                             angle = new Angle(MathF.PI * 1.5f);
+                             break;
+-                        // Edge sprites
+                         case Direction.South:
+                             break;
+                         case Direction.East:
+@@ -225,14 +278,14 @@ namespace Robust.Client.Map
+ 
+                     if (angle != Angle.Zero)
+                     {
+-                        image.Mutate(o => o.Rotate((float)-angle.Degrees));
++                        edgeImage.Mutate(o => o.Rotate((float)-angle.Degrees));
+                     }
+ 
+                     var point = new Vector2i(column * tileSize, row * tileSize);
+                     var box = new UIBox2i(0, 0, tileSize, tileSize);
+-                    image.Blit(box, sheet, point);
++                    edgeImage.Blit(box, sheet, point);
++                    edgeImage.Dispose();
+ 
+-                    // If you ever need edge variants then you could just bump this.
+                     var edgeList = new Box2[1];
+                     edgeList[0] = Box2.FromDimensions(
+                         point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
+@@ -243,6 +296,8 @@ namespace Robust.Client.Map
+                 }
+             }
+ 
++            errorImage.Dispose();
++
+             _tileRegions = tileRegs.ToFrozenDictionary();
+             _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
+             _sawmill.Debug($"Tile atlas took {sw.Elapsed} to build");
 diff --git a/Robust.Client/Robust.Client.csproj b/Robust.Client/Robust.Client.csproj
 index 6ee0278..a3b0fef 100644
 --- a/Robust.Client/Robust.Client.csproj
@@ -4762,6 +4956,27 @@ index 2524f06..416ccbd 100644
  
                  // GetFiles returns full paths, we want them relative to root
                  foreach (var filePath in paths)
+diff --git a/Robust.Shared/ContentPack/IResourceManager.cs b/Robust.Shared/ContentPack/IResourceManager.cs
+index 7bcafc2..4177b11 100644
+--- a/Robust.Shared/ContentPack/IResourceManager.cs
++++ b/Robust.Shared/ContentPack/IResourceManager.cs
+@@ -1,4 +1,4 @@
+-﻿using System;
++using System;
+ using System.Collections.Generic;
+ using System.Diagnostics.CodeAnalysis;
+ using System.IO;
+@@ -26,6 +26,10 @@ namespace Robust.Shared.ContentPack
+         /// <param name="loader"></param>
+         void AddRoot(ResPath prefix, IContentRoot loader);
+ 
++        void MountContentPack(string pack, ResPath? prefix = null, Func<string, bool>? filter = null);
++        void MountContentPack(Stream zipStream, ResPath? prefix = null, Func<string, bool>? filter = null);
++        void MountContentDirectory(string path, ResPath? prefix = null);
++
+         /// <summary>
+         ///     Read a file from the mounted content roots.
+         /// </summary>
 diff --git a/Robust.Shared/ContentPack/IResourceManagerInternal.cs b/Robust.Shared/ContentPack/IResourceManagerInternal.cs
 index 3ccce3e..3aa3a83 100644
 --- a/Robust.Shared/ContentPack/IResourceManagerInternal.cs
@@ -4912,7 +5127,7 @@ index 64ffaee..0cabecb 100644
              return Path.GetDirectoryName(location)!;
          }
 diff --git a/Robust.Shared/ContentPack/ResourceManager.cs b/Robust.Shared/ContentPack/ResourceManager.cs
-index b58f22e..a32d9b7 100644
+index b58f22e..1cd67d0 100644
 --- a/Robust.Shared/ContentPack/ResourceManager.cs
 +++ b/Robust.Shared/ContentPack/ResourceManager.cs
 @@ -1,4 +1,4 @@
@@ -4949,6 +5164,28 @@ index b58f22e..a32d9b7 100644
              AddRoot(prefix.Value, loader);
          }
  
+@@ -200,8 +200,9 @@ namespace Robust.Shared.ContentPack
+                 return false;
+             }
+ 
+-            foreach (var (prefix, root) in _contentRoots)
++            for (var i = _contentRoots.Length - 1; i >= 0; i--)
+             {
++                var (prefix, root) = _contentRoots[i];
+                 if (!path.Value.TryRelativeTo(prefix, out var relative))
+                 {
+                     continue;
+@@ -327,8 +328,9 @@ namespace Robust.Shared.ContentPack
+ 
+             var alreadyReturnedFiles = new HashSet<ResPath>();
+ 
+-            foreach (var (prefix, root) in _contentRoots)
++            for (var i = _contentRoots.Length - 1; i >= 0; i--)
+             {
++                var (prefix, root) = _contentRoots[i];
+                 if (!path.Value.TryRelativeTo(prefix, out var relative))
+                 {
+                     continue;
 diff --git a/Robust.Shared/GameObjects/Component.cs b/Robust.Shared/GameObjects/Component.cs
 index e2679c7..84421b9 100644
 --- a/Robust.Shared/GameObjects/Component.cs

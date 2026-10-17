@@ -1684,10 +1684,10 @@ index 00000000..f391ae62
 +}
 diff --git a/Content.Client/Launcher/ServerContentDownloader.cs b/Content.Client/Launcher/ServerContentDownloader.cs
 new file mode 100644
-index 00000000..c09418af
+index 00000000..aeb119b7
 --- /dev/null
 +++ b/Content.Client/Launcher/ServerContentDownloader.cs
-@@ -0,0 +1,218 @@
+@@ -0,0 +1,211 @@
 +using System;
 +using System.IO;
 +using System.Net.Http;
@@ -1890,15 +1890,8 @@ index 00000000..c09418af
 +    {
 +        try
 +        {
-+            foreach (var m in _resManager.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance))
-+            {
-+                if (m.Name == "MountContentPack" && m.GetParameters().Length == 2 && m.GetParameters()[0].ParameterType == typeof(string))
-+                {
-+                    m.Invoke(_resManager, new object?[] { zipPath, null });
-+                    _sawmill.Info($"Mounted content pack into VFS: {zipPath}");
-+                    return;
-+                }
-+            }
++            _resManager.MountContentPack(zipPath);
++            _sawmill.Info($"Mounted content pack into VFS: {zipPath}");
 +        }
 +        catch (Exception ex)
 +        {
